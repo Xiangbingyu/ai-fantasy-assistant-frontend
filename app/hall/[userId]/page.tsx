@@ -272,16 +272,6 @@ export default function WorldHall() {
         title="幻境协创"
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
-        style={{
-            backgroundColor: 'rgba(255, 255, 255, 1)',
-            backdropFilter: 'saturate(200%) blur(10px)',
-            WebkitBackdropFilter: 'saturate(200%) blur(10px)',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
-            padding: '0.875rem 2rem',
-            position: 'sticky',
-            top: 0,
-            zIndex: 100,
-        }}
         />
 
       <div className="bg-white py-3 transition-all duration-300 w-full">
@@ -291,29 +281,16 @@ export default function WorldHall() {
         tags={tags}
         selectedTags={selectedTags}
         setSelectedTags={setSelectedTags}
-        tagStyle={{
-            selected: 'bg-gray-800 text-white hover:bg-gray-700',
-            unselected: 'bg-gray-800 text-white hover:bg-gray-700',
-            padding: '0.375rem 0.75rem',
-            borderRadius: '0.5rem',
-            margin: '0 0.5rem 0.5rem 0'
-        }}
     />
     </div>
 
       <div className="flex flex-1 container mx-auto px-4 py-6 gap-6">
-        <MyWorldsSidebar
-          myWorlds={myWorlds}
-          onSelectWorld={(worldId) => startCreation(worldId, 'sidebar')}
-          style={{
-            width: '280px',
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-            padding: '1.5rem',
-            flexShrink: 0
-            }}
-        />
+        <div className="w-[280px] bg-white rounded-xl shadow-sm p-6 flex-shrink-0">
+          <MyWorldsSidebar
+            myWorlds={myWorlds}
+            onSelectWorld={(worldId) => startCreation(worldId, 'sidebar')}
+          />
+        </div>
 
         <main className="flex-1">
           <h2 className="text-xl font-semibold text-gray-800 mb-6">
@@ -339,15 +316,6 @@ export default function WorldHall() {
                   <WorldCard
                     world={world}
                     onClick={() => startCreation(world.id, 'card')}
-                    cardStyle={{
-                      padding: '0',
-                      borderRadius: '12px'
-                    }}
-                    textStyle={{
-                      title: 'font-semibold text-gray-800 text-lg mb-1',
-                      tags: 'text-gray-500 text-sm',
-                      info: 'text-gray-400 text-xs mt-2'
-                    }}
                   />
                 </div>
               ))

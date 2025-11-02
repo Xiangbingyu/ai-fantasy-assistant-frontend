@@ -13,6 +13,38 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   // 新增：背景元素动画状态
   const [bgPosition, setBgPosition] = useState({ x: 0, y: 0 });
+  
+  // 使用useEffect添加动画样式，确保只在客户端执行
+  useEffect(() => {
+    // 创建并添加动画样式
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+      @keyframes buttonGradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // 清理函数
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   // 新增：鼠标移动时背景轻微偏移，营造深度感
   useEffect(() => {
@@ -117,8 +149,8 @@ export default function LoginPage() {
             fontSize: '36px',
             fontWeight: 700,
             background: 'linear-gradient(90deg, #6366f1, #8b5cf6)',
-            '-webkit-background-clip': 'text',
-            'background-clip': 'text',
+            WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
             color: 'transparent',
             margin: '0 0 8px 0',
             letterSpacing: '-0.5px',
@@ -185,7 +217,6 @@ export default function LoginPage() {
               display: 'block',
               fontSize: '14px',
               fontWeight: 500,
-              color: '#475569',
               marginBottom: '8px',
               transition: 'color 0.2s ease',
               // 输入框聚焦时标签变色
@@ -214,10 +245,17 @@ export default function LoginPage() {
               onBlur={() => setFocusedInput(null)}
               // 新增：输入时轻微缩放，增强反馈
               onInput={(e) => {
-                (e.currentTarget as HTMLInputElement).style.transform = 'scale(1.01)';
-                setTimeout(() => {
-                  (e.currentTarget as HTMLInputElement).style.transform = 'scale(1)';
-                }, 100);
+                // 使用React的方式处理样式变化，避免直接操作DOM
+                if (typeof window !== 'undefined') {
+                  const inputElement = e.currentTarget as HTMLInputElement;
+                  inputElement.style.transform = 'scale(1.01)';
+                  setTimeout(() => {
+                    // 在setTimeout回调中再次确认window存在并使用保存的元素引用
+                    if (typeof window !== 'undefined' && inputElement) {
+                      inputElement.style.transform = 'scale(1)';
+                    }
+                  }, 100);
+                }
               }}
             />
           </div>
@@ -257,11 +295,18 @@ export default function LoginPage() {
                 onFocus={() => setFocusedInput('password')}
                 onBlur={() => setFocusedInput(null)}
                 onInput={(e) => {
-                  (e.currentTarget as HTMLInputElement).style.transform = 'scale(1.01)';
+                // 使用React的方式处理样式变化，避免直接操作DOM
+                if (typeof window !== 'undefined') {
+                  const inputElement = e.currentTarget as HTMLInputElement;
+                  inputElement.style.transform = 'scale(1.01)';
                   setTimeout(() => {
-                    (e.currentTarget as HTMLInputElement).style.transform = 'scale(1)';
+                    // 在setTimeout回调中再次确认window存在并使用保存的元素引用
+                    if (typeof window !== 'undefined' && inputElement) {
+                      inputElement.style.transform = 'scale(1)';
+                    }
                   }, 100);
-                }}
+                }
+              }}
               />
               {/* 密码可见切换：图标悬停动画 */}
               <button
@@ -419,26 +464,4 @@ export default function LoginPage() {
   );
 }
 
-// 新增：互动相关动画样式
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-  @keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-  @keyframes buttonGradient {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-`;
-document.head.appendChild(style);
+// 动画样式已移至useEffect钩子中，确保只在客户端执行

@@ -907,7 +907,7 @@ export default function WorldChaptersPage() {
                       {chapter.apiId && (
                         <button
                           type="button"
-                          onClick={() => goToChapter(chapter.apiId)} // 调用跳转方法
+                          onClick={() => chapter.apiId != null && goToChapter(chapter.apiId)} // 仅在 apiId 存在时跳转
                           className="text-sm bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-3 py-1.5 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
                         >
                           进入章节
