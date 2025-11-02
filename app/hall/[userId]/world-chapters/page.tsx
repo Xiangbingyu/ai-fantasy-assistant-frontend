@@ -161,7 +161,10 @@ export default function WorldChaptersPage() {
         }));
 
         // 更新章节状态，显示已有内容
-        setChapters(formattedChapters);
+        setChapters(formattedChapters.map(ch => ({
+          ...ch,
+          apiId: ch.apiId ? Number(ch.apiId) : null
+        })));
         // 同时更新hasCreatedChapters，允许添加新章节
         setHasCreatedChapters(formattedChapters.length > 0);
       } catch (err) {
@@ -249,26 +252,31 @@ export default function WorldChaptersPage() {
   }, [passedWorldData]);
 
   // 2. 章节表单状态：初始化时apiId设为null
-  const [chapters, setChapters] = useState<ChapterForm[]>(() => {
-    if (passedWorldData?.chapters?.length) {
-      return passedWorldData.chapters as ChapterForm[]; // 传递的章节已含apiId
-    }
-    // 默认章节：apiId初始null
-    return [{
+  const [chapters, setChapters] = useState<ChapterForm[]>([
+    {
       id: '1',
       apiId: null,
       name: '',
       opening: '',
       background: '',
       isSubmitted: false
-    }];
-  });
+    }
+  ]);
 
   // 同步传递的章节数据（含apiId）
   useEffect(() => {
     if (passedWorldData?.chapters?.length) {
-      setChapters(passedWorldData.chapters as ChapterForm[]);
-      console.log('从URL参数加载章节数据（含apiId）：', passedWorldData.chapters);
+      // 确保传递的章节数据格式正确，包含所有必要字段
+      const formattedChapters = passedWorldData.chapters.map((ch: any) => ({
+        id: ch.id?.toString() || Date.now().toString(),
+        apiId: ch.apiId !== undefined ? (typeof ch.apiId === 'number' ? ch.apiId : Number(ch.apiId) || null) : null,
+        name: ch.name || '',
+        opening: ch.opening || '',
+        background: ch.background || '',
+        isSubmitted: ch.isSubmitted || false
+      }));
+      setChapters(formattedChapters);
+      console.log('从URL参数加载章节数据（含apiId）：', formattedChapters);
     }
   }, [passedWorldData?.chapters]);
 
@@ -483,7 +491,7 @@ export default function WorldChaptersPage() {
         // 第一步：创建章节（原有逻辑）
         // --------------------------
         const chapterPayload: CreateChapterPayload = {
-          world_id: currentWorldId,
+          world_id: currentWorldId!,
           creator_user_id: currentUserId,
           name: chapter.name,
           opening: chapter.opening,

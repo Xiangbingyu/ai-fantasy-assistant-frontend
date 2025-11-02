@@ -67,7 +67,7 @@ export default function LoginPage() {
         // 小说创作主题背景（手写稿+墨水纹理）
         backgroundImage: `
         linear-gradient(rgba(245, 247, 250, 0.92), rgba(245, 247, 250, 0.97)),
-        url('/image/background.png')
+        url('/image/login1.png')
         `,
         backgroundBlendMode: 'multiply, overlay',
         backgroundSize: 'cover, cover',

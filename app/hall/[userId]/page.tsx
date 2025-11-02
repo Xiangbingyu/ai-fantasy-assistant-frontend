@@ -37,7 +37,7 @@ export default function WorldHall() {
         const data = await res.json();
         const worldsWithCovers = data.map((world: World) => ({
           ...world,
-          cover_url: world.cover_url || DEFAULT_WORLD_COVER
+          cover_url: DEFAULT_WORLD_COVER
         }));
         setAllWorlds(worldsWithCovers);
       } catch (err) {
