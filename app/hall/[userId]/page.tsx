@@ -17,7 +17,6 @@ export default function WorldHall() {
   const [sortBy, setSortBy] = useState('热度');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [allWorlds, setAllWorlds] = useState<World[]>([]);
-  const [allCharacters, setAllCharacters] = useState<WorldCharacter[]>([]); // 角色数据
 
   const [myWorlds, setMyWorlds] = useState<World[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,23 +49,6 @@ export default function WorldHall() {
     fetchAllWorlds();
   }, []);
 
-  // 新增：获取所有角色数据（关键修复，确保有角色数据可传递）
-  useEffect(() => {
-    const fetchAllCharacters = async () => {
-      try {
-        const res = await fetch('/api/db/worlds'); // 假设接口返回所有角色
-        
-        const data: WorldCharacter[] = await res.json();
-        setAllCharacters(data);
-        console.log("获取人物数据成功", data)
-      } catch (err) {
-        const errMsg = err instanceof Error ? err.message : '获取角色数据异常';
-        console.error(errMsg, err); // 非致命错误，不阻断页面加载
-      }
-    };
-
-    fetchAllCharacters();
-  }, []);
 
   // 2. 获取当前用户的世界
   useEffect(() => {
@@ -122,84 +104,26 @@ export default function WorldHall() {
     });
 
   // 进入创作逻辑（修复角色数据传递）
+  // 修改后的 startCreation 函数中 URL 拼接逻辑
   const startCreation = async (worldId: number, from: 'sidebar' | 'card') => {  
     setError(null);
     setLoading(true);
     
     try {
-      // 1. 调用后端接口，获取目标世界的详情（包含角色）
+      // 1. 仅验证世界是否存在（可选，确保跳转的世界有效）
       const res = await fetch(`/api/db/worlds/${worldId}`);
       if (!res.ok) {
         const errData = await res.json();
         throw new Error(errData.error || '获取世界详情失败');
       }
-      const targetWorld = await res.json();
-      console.log("从后端获取的世界详情：", targetWorld);
 
-
-      // --------------------------
-      // 新增：2. 获取该世界的章节列表（调用指定接口）
-      // --------------------------
-      let targetChapters: any[] = []; // 存储章节数据，类型可根据实际定义（如Chapter[]）
-      const chaptersRes = await fetch(
-        `/api/db/worlds/${worldId}/chapters?creator_user_id=${targetWorld.user_id}` // 必传creator_user_id
-      );
-      if (!chaptersRes.ok) {
-        // 章节获取失败不阻断主流程（可根据业务调整是否抛错）
-        const chaptersErr = await chaptersRes.json().catch(() => ({}));
-        console.warn('获取章节列表失败，将使用空白章节：', chaptersErr.error || '未知错误');
-      } else {
-        targetChapters = await chaptersRes.json();
-        console.log("目标世界ID:", worldId, "后端返回的章节数据:", targetChapters);
-      }
-
-
-      // 3. 提取角色数据（原有逻辑不变）
-      const targetCharacters = targetWorld.main_characters || [];
-      console.log("目标世界ID:", worldId, "后端返回的角色数据:", targetCharacters);
-
-
-      // 4. 构造传递给下一页的数据（新增chapters字段）
-      const worldData = {
-        name: targetWorld.name,
-        tags: targetWorld.tags,
-        is_public: false,
-        worldview: targetWorld.worldview,
-        master_setting: targetWorld.master_setting,
-        origin_world_id: targetWorld.id,
-        popularity: targetWorld.popularity,
-        characters: targetCharacters.map((char: any) => ({ // 原有角色字段
-          name: char.name, 
-          background: char.background 
-        })),
-        chapters: targetChapters.map((chap: any) => ({ // 新增章节字段（保留需要的字段）
-          id: chap.id.toString(), // 下一页ChapterForm的id是string，这里转一下
-          name: chap.name,
-          opening: chap.opening,
-          background: chap.background
-        })),
-        from: from 
-      };
-
-
-      // 5. 拼接URL参数（新增chapters参数）
+      // 2. 只拼接 3 个必要参数，彻底避免 URL 超限
       const queryParams = new URLSearchParams();
-      // 原有参数...
-      queryParams.append('worldName', encodeURIComponent(worldData.name));
-      queryParams.append('tags', JSON.stringify(worldData.tags));
-      queryParams.append('isPublic', worldData.is_public.toString());
-      queryParams.append('worldview', encodeURIComponent(worldData.worldview || ''));
-      queryParams.append('masterSetting', encodeURIComponent(worldData.master_setting || ''));
-      queryParams.append('originWorldId', worldData.origin_world_id.toString());
-      queryParams.append('popularity', worldData.popularity.toString());
-      queryParams.append('characters', encodeURIComponent(JSON.stringify(worldData.characters)));
-      // 新增：传递章节参数（格式与characters一致）
-      queryParams.append('chapters', encodeURIComponent(JSON.stringify(worldData.chapters)));
+      queryParams.append('worldId', worldId.toString()); // 核心：仅传世界 ID
+      queryParams.append('from', from); // 传来源（sidebar/card），用于权限控制
+      queryParams.append('userId', currentUserId.toString()); // 传当前用户 ID（下一页可能需要）
 
-      queryParams.append('from', from); 
-      console.log("已添加from参数到URL：", from); // 验证是否添加成功
-
-      // 6. 跳转（原有逻辑不变）
+      // 3. 跳转 URL（简洁，无超限风险）
       const jumpUrl = `/hall/${currentUserId}/world-chapters?${queryParams.toString()}`;
       Router.push(jumpUrl);
 
@@ -210,7 +134,7 @@ export default function WorldHall() {
     } finally {
       setLoading(false);
     }
-};
+  };
 
   const createWorld = () => {
     setError(null);

@@ -31,17 +31,6 @@ export default function WorldChaptersPage() {
   // 【修改1：将enterFrom状态移到最顶部，确保先声明后使用】
   const [enterFrom, setEnterFrom] = useState<'sidebar' | 'card' | 'new' | 'unknown'>('unknown');
   // 1. 解析传递的数据结构：传递的章节需补全apiId和isSubmitted
-  const [passedWorldData, setPassedWorldData] = useState<{
-    name?: string;
-    tags?: string[];
-    isPublic?: boolean;
-    worldview?: string;
-    masterSetting?: string;
-    originWorldId?: number;
-    popularity?: number;
-    characters?: { name: string; background: string }[];
-    chapters?: Omit<ChapterForm, 'isSubmitted' | 'apiId'> & { apiId?: number }[]; // 兼容传递的apiId
-  } | null>(null);
 
   // 新增：章节创建成功的Toast状态
   const [showChapterToast, setShowChapterToast] = useState(false);
@@ -58,80 +47,234 @@ export default function WorldChaptersPage() {
   const [currentWorldId, setCurrentWorldId] = useState<number | null>(null);
   // 新增：章节数据加载状态
   const [chapterDataLoading, setChapterDataLoading] = useState(false);
+  // 【新增：7个对话主角设定的拆分状态】
+  const [protagonistAppearance, setProtagonistAppearance] = useState(''); // 外貌特征
+  const [protagonistClothing, setProtagonistClothing] = useState(''); // 服饰风格
+  const [protagonistBackground, setProtagonistBackground] = useState(''); // 人物背景
+  const [protagonistPersonality, setProtagonistPersonality] = useState(''); // 性格特征
+  const [protagonistLanguage, setProtagonistLanguage] = useState(''); // 语言风格
+  const [protagonistBehavior, setProtagonistBehavior] = useState(''); // 行为逻辑
+  const [protagonistPsychology, setProtagonistPsychology] = useState(''); // 心理特质
 
+  // 【新增】解析后端返回的正则编码字符串，提取7个主角设定字段
+  const parseMasterSetting = (encodedStr: string) => {
+
+    interface FieldMap {
+    '外貌特征': string;
+    '服饰风格': string;
+    '人物背景': string;
+    '性格特征': string;
+    '语言风格': string;
+    '行为逻辑': string;
+    '心理特质': string;
+    }
+
+  // 字段映射：后端编码的key → 前端状态变量标识
+  const fieldMap: FieldMap = {
+    '外貌特征': 'appearance',
+    '服饰风格': 'clothing',
+    '人物背景': 'background',
+    '性格特征': 'personality',
+    '语言风格': 'language',
+    '行为逻辑': 'behavior',
+    '心理特质': 'psychology'
+  };
+
+  // 初始化解析结果（默认空字符串，对应7个输入框）
+  const result = {
+    appearance: '',
+    clothing: '',
+    background: '',
+    personality: '',
+    language: '',
+    behavior: '',
+    psychology: ''
+  };
+
+  // 若后端返回空字符串，直接返回默认结果
+  if (!encodedStr.trim()) return result;
+  console.log('解析master_setting字符串：', encodedStr);
+  // 步骤1：按字段分隔符 ||| 拆分字符串
+  const fieldArray = encodedStr.split('|||');
+
+  // 步骤2：遍历每个字段，用正则提取key和value
+  fieldArray.forEach(field => {
+    const match = field.match(/^(.+?)###(.+)$/);
+    if (match) {
+      const [, fieldKey, fieldValue] = match;
+      // 关键：将 fieldKey 断言为 FieldMap 的合法键类型（keyof FieldMap）
+      const validKey = fieldKey as keyof FieldMap;
+      // 步骤3：将“未填写”转为空字符串
+      const realValue = fieldValue === '未填写' ? '' : fieldValue;
+      // 步骤4：只有当键存在于 fieldMap 中时，才赋值（避免无效键）
+      if (validKey in fieldMap) {
+        result[fieldMap[validKey] as keyof typeof result] = realValue;
+      }
+    }
+    });
+
+    return result;
+  }
 
   useEffect(() => {
-    try {
-      const worldName = searchParams.get('worldName');
-      const isPublic = searchParams.get('isPublic');
-      const worldview = searchParams.get('worldview');
-      const masterSetting = searchParams.get('masterSetting');
-      const originWorldId = searchParams.get('originWorldId');
-      const popularity = searchParams.get('popularity');
-      const tagsStr = searchParams.get('tags');
-      const charactersStr = searchParams.get('characters');
-      const chaptersStr = searchParams.get('chapters');
-      // 1. 新增：从 URL 参数中获取 from（来源标识）
-      const from = searchParams.get('from') as 'sidebar' | 'card' | null;
-      console.log('URL中的from参数：', from); 
-
-      const parsedData: any = {};
-      if (worldName) parsedData.name = decodeURIComponent(worldName);
-      if (isPublic) parsedData.isPublic = isPublic === 'true';
-      if (worldview) parsedData.worldview = decodeURIComponent(worldview);
-      if (masterSetting) parsedData.masterSetting = decodeURIComponent(masterSetting);
-      if (originWorldId) parsedData.originWorldId = Number(originWorldId);
-      if (popularity) parsedData.popularity = Number(popularity);
-      if (tagsStr) parsedData.tags = JSON.parse(decodeURIComponent(tagsStr));
-      // 2. 新增：将 from 存储到 parsedData 中
-      if (from) parsedData.from = from;
-
-      if (from === 'sidebar' && originWorldId) {
-        const worldId = Number(originWorldId);
-        if (!isNaN(worldId)) {
-          setCurrentWorldId(worldId); // 自动设置世界ID，跳过创建
-        }
-      }
-
-      // 【此处now使用enterFrom已声明，无报错】
-      if (parsedData.from === 'sidebar') {
-        setEnterFrom('sidebar'); // 从侧边栏进入
-      } else if (parsedData.from === 'card') {
-        setEnterFrom('card'); // 从公开卡片进入
-      } else if (!originWorldId) {
-        setEnterFrom('new'); // 无 originWorldId → 新建世界（直接点“立即创作”）
-      } else {
-        setEnterFrom('unknown'); // 异常情况
-      }
-
-      // 处理角色解析
-      if (charactersStr) {
-        const decodedCharacters = decodeURIComponent(charactersStr);
-        parsedData.characters = JSON.parse(decodedCharacters);
-      }
-
-      // 处理章节解析：补全apiId（传递的有则用，无则null）和isSubmitted（默认false）
-      if (chaptersStr) {
-        const decodedChapters = decodeURIComponent(chaptersStr);
-        const rawChapters = JSON.parse(decodedChapters) as Omit<ChapterForm, 'isSubmitted' | 'apiId'> & { apiId?: number }[];
-        parsedData.chapters = rawChapters.map(ch => ({
-          ...ch,
-          apiId: ch.apiId || null, // 传递的apiId或默认null
-          isSubmitted: false // 初始未提交
-        }));
-        console.log('解析得到的章节数据（含apiId）：', parsedData.chapters);
-      }
-
-
-      console.log('解析得到的传递世界数据：', parsedData);
-      // 3. 新增：打印解析到的来源，验证是否成功接收
-      console.log('解析得到的来源标识（from）：', parsedData.from);
-      setPassedWorldData(parsedData);
-    } catch (err) {
-      console.error('解析传递的世界数据失败：', err);
-      setPassedWorldData(null);
+  try {
+    // 1. 仅解析2个必要参数：worldId（核心）和from（来源标识）
+    const worldIdStr = searchParams.get('worldId');
+    const from = searchParams.get('from') as 'sidebar' | 'card' | null;
+    
+    // 2. 处理worldId：转为数字，无效则设为null
+    const worldId = worldIdStr ? (isNaN(Number(worldIdStr)) ? null : Number(worldIdStr)) : null;
+    setCurrentWorldId(worldId); // 直接设置当前世界ID，无需依赖originWorldId
+    
+    // 3. 处理from：确定进入来源，默认unknown
+    if (from === 'sidebar') {
+      setEnterFrom('sidebar');
+    } else if (from === 'card') {
+      setEnterFrom('card');
+    } else if (!worldId) { // 无worldId → 新建世界
+      setEnterFrom('new');
+    } else {
+      setEnterFrom('unknown');
     }
-  }, [searchParams]);
+
+    console.log('解析到的关键参数：', { worldId, from });
+
+  } catch (err) {
+    console.error('解析URL关键参数失败：', err);
+    setCurrentWorldId(null);
+    setEnterFrom('unknown');
+  }
+}, [searchParams]);
+
+  // 新增：通过worldId获取该世界的章节数据
+  const fetchWorldChapters = async (worldId: number) => {
+    setChapterDataLoading(true);
+    setError(null);
+
+    try {
+      // 调用章节接口：需传入worldId和creator_user_id
+      const res = await fetch(
+        `/api/db/worlds/${worldId}/chapters?creator_user_id=${currentUserId}`
+      );
+      if (!res.ok) throw new Error('加载章节数据失败');
+
+      const chapterData = await res.json();
+      console.log('从接口获取的章节数据：', chapterData);
+
+      let formattedChapters: ChapterForm[] = [];
+      if (chapterData.length === 0) {
+        // 无章节时初始化默认章节
+        formattedChapters = [{
+          id: 'default-1',
+          apiId: null,
+          name: '',
+          opening: '',
+          background: '',
+          isSubmitted: false
+        }];
+      } else {
+        // 格式化接口返回的章节数据（匹配ChapterForm类型）
+        formattedChapters = chapterData.map((ch: any) => ({
+          id: ch.id?.toString() || Date.now().toString(), // 转为前端字符串ID
+          apiId: ch.id ? Number(ch.id) : null, // 存储后端真实ID
+          name: ch.name || '',
+          opening: ch.opening || '',
+          background: ch.background || '',
+          isSubmitted: true // 接口返回的章节都是已提交的
+        }));
+      }
+
+      setChapters(formattedChapters);
+      setHasCreatedChapters(formattedChapters.length > 0);
+
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : '加载章节时发生未知错误';
+      setError(errMsg);
+      console.error(errMsg, err);
+
+      // 错误时初始化默认章节
+      setChapters([{
+        id: 'default-err-1',
+        apiId: null,
+        name: '',
+        opening: '',
+        background: '',
+        isSubmitted: false
+      }]);
+    } finally {
+      setChapterDataLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // 仅当worldId存在且非新建状态时，才请求数据
+    if (!currentWorldId || enterFrom === 'new') return;
+
+    const fetchWorldDetail = async () => {
+    setWorldLoading(true); // 复用现有加载状态
+    setError(null);
+
+    try {
+      // 调用接口获取世界详情（包含正则编码的master_setting）
+      const res = await fetch(`/api/db/worlds/${currentWorldId}`);
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `获取世界ID:${currentWorldId}的详情失败`);
+      }
+
+      const worldDetail = await res.json();
+      console.log('从接口获取的世界详情：', worldDetail);
+
+      // --------------------------
+      // 【关键新增】解析并填充7个输入框
+      // --------------------------
+      if (worldDetail.master_setting) {
+        // 1. 调用解析函数，得到7个字段的具体值
+        const parsedFields = parseMasterSetting(worldDetail.master_setting);
+        // 2. 同步到7个输入框对应的状态（自动填充输入框）
+        setProtagonistAppearance(parsedFields.appearance);
+        setProtagonistClothing(parsedFields.clothing);
+        setProtagonistBackground(parsedFields.background);
+        setProtagonistPersonality(parsedFields.personality);
+        setProtagonistLanguage(parsedFields.language);
+        setProtagonistBehavior(parsedFields.behavior);
+        setProtagonistPsychology(parsedFields.psychology);
+      }
+
+      // （原有逻辑：同步世界表单、角色、章节状态，保持不变）
+      setWorldForm({
+        user_id: currentUserId,
+        name: worldDetail.name || '',
+        tags: worldDetail.tags || [],
+        is_public: worldDetail.is_public || false,
+        worldview: worldDetail.worldview || '',
+        master_setting: worldDetail.master_setting || '', // 保留原始编码字符串（可选）
+        origin_world_id: worldDetail.origin_world_id || null,
+        popularity: worldDetail.popularity || 0,
+        characters: worldDetail.main_characters || []
+      });
+
+      const syncedCharacters = (worldDetail.main_characters || []).map((char: any, index: number) => ({
+        id: index + 1,
+        world_id: currentWorldId,
+        name: char.name || '',
+        background: char.background || ''
+      }));
+      setCharacters(syncedCharacters);
+
+      fetchWorldChapters(currentWorldId);
+
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : '获取世界详情异常';
+      setError(errMsg);
+      console.error(errMsg, err);
+    } finally {
+      setWorldLoading(false);
+    }
+  };
+
+  fetchWorldDetail();
+}, [currentWorldId, enterFrom, currentUserId]); // 依赖worldId和进入状态
 
   // 【新增：from是sidebar时，自动加载章节数据】
   useEffect(() => {
@@ -142,43 +285,8 @@ export default function WorldChaptersPage() {
     setChapterDataLoading(true);
     setError(null);
 
-    const fetchSidebarWorldChapters = async () => {
-      try {
-        // 请求该世界的章节数据（接口需返回该worldId对应的所有章节）
-        const res = await fetch(
-          `/api/db/worlds/${currentWorldId}/chapters?creator_user_id=${currentUserId}`
-        );
-        if (!res.ok) throw new Error('加载章节数据失败');
-
-        const chapterData: ChapterForm[] = await res.json();
-        console.log('后端返回的章节原始数据：', chapterData); 
-        // 处理章节数据（补全isSubmitted为true，因为是已创建的章节）
-        const formattedChapters = chapterData.map(ch => ({
-          ...ch,
-          isSubmitted: true,
-          apiId: ch.id || null, // 直接使用后端返回的数字ID，类型匹配`number | null`
-          id: ch.id.toString() // 前端ID保持字符串类型
-        }));
-
-        // 更新章节状态，显示已有内容
-        setChapters(formattedChapters.map(ch => ({
-          ...ch,
-          apiId: ch.apiId ? Number(ch.apiId) : null
-        })));
-        // 同时更新hasCreatedChapters，允许添加新章节
-        setHasCreatedChapters(formattedChapters.length > 0);
-      } catch (err) {
-        const errMsg = err instanceof Error ? err.message : '加载章节时发生未知错误';
-        setError(errMsg);
-        console.error(errMsg, err);
-      } finally {
-        // 结束加载状态
-        setChapterDataLoading(false);
-      }
-  };
-
-  fetchSidebarWorldChapters();
-}, [enterFrom, currentWorldId]); // 依赖from和世界ID，变化时重新加载
+    fetchWorldChapters(currentWorldId);
+  }, [enterFrom, currentWorldId]); // 依赖from和世界ID，变化时重新加载
 
 
   // 世界表单状态（保持不变）
@@ -189,37 +297,17 @@ export default function WorldChaptersPage() {
 
   const [worldForm, setWorldForm] = useState<WorldFormState>({
     user_id: currentUserId,
-    name: passedWorldData?.name || '',
-    tags: passedWorldData?.tags || [],
-    is_public: passedWorldData?.isPublic || false,
-    worldview: passedWorldData?.worldview || '',
-    master_setting: passedWorldData?.masterSetting || '',
-    origin_world_id: passedWorldData?.originWorldId || null,
-    popularity: passedWorldData?.popularity || 0,
-    characters: passedWorldData?.characters?.map(char => ({
-      name: char.name,
-      background: char.background
-    })) || []
+    name: '', // 空白初始值
+    tags: [], // 空白初始值
+    is_public: false,
+    worldview: '', // 空白初始值
+    master_setting: '', // 空白初始值
+    origin_world_id: null,
+    popularity: 0,
+    characters: [] // 空白初始值
   });
 
-  useEffect(() => {
-    if (passedWorldData) {
-      setWorldForm(prev => ({
-        ...prev,
-        name: passedWorldData.name || '',
-        tags: passedWorldData.tags || [],
-        is_public: passedWorldData.isPublic || false,
-        worldview: passedWorldData.worldview || '',
-        master_setting: passedWorldData.masterSetting || '',
-        origin_world_id: passedWorldData.originWorldId || null,
-        popularity: passedWorldData.popularity || 0,
-        characters: passedWorldData.characters?.map(char => ({
-          name: char.name,
-          background: char.background
-        })) || []
-      }));
-    }
-  }, [passedWorldData]);
+
 
 
   // 标签输入状态（完全不变）
@@ -227,29 +315,9 @@ export default function WorldChaptersPage() {
 
   // 角色状态管理（完全不变）
   const [characters, setCharacters] = useState<Character[]>(() => {
-    if (passedWorldData?.characters?.length) {
-      return passedWorldData.characters.map((char, index) => ({
-        id: index + 1,
-        world_id: passedWorldData.originWorldId || 0,
-        name: char.name || '',
-        background: char.background || ''
-      }));
-    }
     return [{ id: 1, world_id: 1, name: '', background: '' }];
   });
 
-  useEffect(() => {
-    if (passedWorldData?.characters?.length) {
-      const syncedCharacters = passedWorldData.characters.map((char, index) => ({
-        id: index + 1,
-        world_id: passedWorldData.originWorldId || 0,
-        name: char.name || '',
-        background: char.background || ''
-      }));
-      setCharacters(syncedCharacters);
-      console.log("获取人物数据成功", syncedCharacters)
-    }
-  }, [passedWorldData]);
 
   // 2. 章节表单状态：初始化时apiId设为null
   const [chapters, setChapters] = useState<ChapterForm[]>([
@@ -262,23 +330,6 @@ export default function WorldChaptersPage() {
       isSubmitted: false
     }
   ]);
-
-  // 同步传递的章节数据（含apiId）
-  useEffect(() => {
-    if (passedWorldData?.chapters?.length) {
-      // 确保传递的章节数据格式正确，包含所有必要字段
-      const formattedChapters = passedWorldData.chapters.map((ch: any) => ({
-        id: ch.id?.toString() || Date.now().toString(),
-        apiId: ch.apiId !== undefined ? (typeof ch.apiId === 'number' ? ch.apiId : Number(ch.apiId) || null) : null,
-        name: ch.name || '',
-        opening: ch.opening || '',
-        background: ch.background || '',
-        isSubmitted: ch.isSubmitted || false
-      }));
-      setChapters(formattedChapters);
-      console.log('从URL参数加载章节数据（含apiId）：', formattedChapters);
-    }
-  }, [passedWorldData?.chapters]);
 
 
   // 以下基础方法（世界表单/标签/角色/章节修改）保持不变
@@ -403,26 +454,45 @@ export default function WorldChaptersPage() {
     }
   };
 
-  // 提交世界表单（保持不变）
+  // 提交世界表单（修改：汇总7个对话主角设定项）
   const handleCreateWorld = async () => {
-    setError(null);
-    setSuccess(null);
-    setWorldLoading(true);
+  setError(null);
+  setSuccess(null);
+  setWorldLoading(true);
 
-    if (!worldForm.name.trim()) {
-      setError('世界名称不能为空');
-      setWorldLoading(false);
-      return;
-    }
+  if (!worldForm.name.trim()) {
+    setError('世界名称不能为空');
+    setWorldLoading(false);
+    return;
+  }
 
-    const payload: CreateWorldPayload = {
-      ...worldForm,
-      user_id: currentUserId,
-      characters: characters.map(char => ({
-        name: char.name,
-        background: char.background
-      }))
-    };
+  // 【正则化编码核心】按规则拼接七个字段
+  const fields = [
+    { key: '外貌特征', value: protagonistAppearance },
+    { key: '服饰风格', value: protagonistClothing },
+    { key: '人物背景', value: protagonistBackground },
+    { key: '性格特征', value: protagonistPersonality },
+    { key: '语言风格', value: protagonistLanguage },
+    { key: '行为逻辑', value: protagonistBehavior },
+    { key: '心理特质', value: protagonistPsychology },
+  ];
+
+  // 拼接格式：key###value|||key###value...（空值用"未填写"）
+  const combinedMasterSetting = fields
+    .map(field => `${field.key}###${field.value || '未填写'}`)
+    .join('|||');
+
+  // 提交给后端的参数
+  const payload: CreateWorldPayload = {
+    ...worldForm,
+    user_id: currentUserId,
+    master_setting: combinedMasterSetting, // 正则化后的字符串
+    characters: characters.map(char => ({
+      name: char.name,
+      background: char.background
+    }))
+  };
+  
 
     try {
       const worldResponse = await fetch('/api/db/worlds', {
@@ -668,7 +738,7 @@ export default function WorldChaptersPage() {
           </div>
         )}
 
-        {/* 创建世界板块（保持不变） */}
+        {/* 创建世界板块（修改：对话主角设定全部改为input组件） */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 mb-8 transition-all duration-300 hover:shadow-lg">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-5 flex items-center gap-2">
             <svg className="w-5 h-5 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -758,19 +828,97 @@ export default function WorldChaptersPage() {
               />
             </div>
 
+            {/* 【修改：对话主角设定全部改为input组件】 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">核心设定</label>
-              <textarea
-                name="master_setting"
-                value={worldForm.master_setting}
-                onChange={handleWorldInputChange}
-                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-200 outline-none min-h-[120px] resize-none"
-                placeholder="描述这个世界的核心规则和设定"
-              />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">对话主角设定</label>
+              
+              {/* 1. 外貌特征（可选） */}
+              <div className="mb-3">
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">外貌特征（可选）</label>
+                <input
+                  type="text"
+                  value={protagonistAppearance}
+                  onChange={(e) => setProtagonistAppearance(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-200 outline-none"
+                  placeholder="如：银发紫眸、身高185cm、左脸颊有疤痕"
+                />
+              </div>
+
+              {/* 2. 服饰风格（可选） */}
+              <div className="mb-3">
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">服饰风格（可选）</label>
+                <input
+                  type="text"
+                  value={protagonistClothing}
+                  onChange={(e) => setProtagonistClothing(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-200 outline-none"
+                  placeholder="如：复古宫廷风、机能风工装、中式汉服"
+                />
+              </div>
+
+              {/* 3. 人物背景（可选） */}
+              <div className="mb-3">
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">人物背景（可选）</label>
+                <input
+                  type="text"
+                  value={protagonistBackground}
+                  onChange={(e) => setProtagonistBackground(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-200 outline-none"
+                  placeholder="如：前帝国将军，因叛国罪被流放，暗中组建反抗军"
+                />
+              </div>
+
+              {/* 4. 性格特征（可选） */}
+              <div className="mb-3">
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">性格特征（可选）</label>
+                <input
+                  type="text"
+                  value={protagonistPersonality}
+                  onChange={(e) => setProtagonistPersonality(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-200 outline-none"
+                  placeholder="如：外冷内热、偏执多疑、乐观开朗"
+                />
+              </div>
+
+              {/* 5. 语言风格（可选） */}
+              <div className="mb-3">
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">语言风格（可选）</label>
+                <input
+                  type="text"
+                  value={protagonistLanguage}
+                  onChange={(e) => setProtagonistLanguage(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-200 outline-none"
+                  placeholder="如：简洁干练、幽默风趣、书面化表达"
+                />
+              </div>
+
+              {/* 6. 行为逻辑（可选） */}
+              <div className="mb-3">
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">行为逻辑（可选）</label>
+                <input
+                  type="text"
+                  value={protagonistBehavior}
+                  onChange={(e) => setProtagonistBehavior(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-200 outline-none"
+                  placeholder="如：遇到危险优先保护同伴、决策前习惯分析利弊"
+                />
+              </div>
+
+              {/* 7. 心理特质（可选） */}
+              <div>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">心理特质（可选）</label>
+                <input
+                  type="text"
+                  value={protagonistPsychology}
+                  onChange={(e) => setProtagonistPsychology(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-200 outline-none"
+                  placeholder="如：安全感缺失、追求完美主义、强烈的正义感"
+                />
+              </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2.5">主要角色</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2.5">其余角色</label>
 
               {characters.map((char, index) => (
                 <div key={char.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-3.5 bg-gray-50 dark:bg-gray-800/50 transition-all duration-200 hover:border-indigo-200 dark:hover:border-indigo-700/50">
@@ -958,7 +1106,7 @@ export default function WorldChaptersPage() {
                       value={chapter.background}
                       onChange={(e) => handleChapterChange(chapter.id, 'background', e.target.value)}
                       className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400 transition-all duration-200 outline-none min-h-[90px] resize-none"
-                      placeholder="章节背景"
+                      placeholder="你扮演的角色设定"
                     />
                   </div>
                 </div>
