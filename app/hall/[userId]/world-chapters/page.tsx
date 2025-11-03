@@ -47,7 +47,8 @@ export default function WorldChaptersPage() {
   const [currentWorldId, setCurrentWorldId] = useState<number | null>(null);
   // 新增：章节数据加载状态
   const [chapterDataLoading, setChapterDataLoading] = useState(false);
-  // 【新增：7个对话主角设定的拆分状态】
+  // 【新增：8个对话主角设定的拆分状态】
+  const [protagonistName, setProtagonistName] = useState(''); 
   const [protagonistAppearance, setProtagonistAppearance] = useState(''); // 外貌特征
   const [protagonistClothing, setProtagonistClothing] = useState(''); // 服饰风格
   const [protagonistBackground, setProtagonistBackground] = useState(''); // 人物背景
@@ -60,6 +61,7 @@ export default function WorldChaptersPage() {
   const parseMasterSetting = (encodedStr: string) => {
 
     interface FieldMap {
+    '名字': string; // 新增名字的映射
     '外貌特征': string;
     '服饰风格': string;
     '人物背景': string;
@@ -71,6 +73,7 @@ export default function WorldChaptersPage() {
 
   // 字段映射：后端编码的key → 前端状态变量标识
   const fieldMap: FieldMap = {
+    '名字': 'name', // 新增名字的前端状态标识
     '外貌特征': 'appearance',
     '服饰风格': 'clothing',
     '人物背景': 'background',
@@ -82,6 +85,7 @@ export default function WorldChaptersPage() {
 
   // 初始化解析结果（默认空字符串，对应7个输入框）
   const result = {
+    name: ' ', // 新增名字字段，默认空格避免未填写时覆盖
     appearance: '',
     clothing: '',
     background: '',
@@ -232,6 +236,7 @@ export default function WorldChaptersPage() {
         // 1. 调用解析函数，得到7个字段的具体值
         const parsedFields = parseMasterSetting(worldDetail.master_setting);
         // 2. 同步到7个输入框对应的状态（自动填充输入框）
+        setProtagonistName(parsedFields.name);
         setProtagonistAppearance(parsedFields.appearance);
         setProtagonistClothing(parsedFields.clothing);
         setProtagonistBackground(parsedFields.background);
@@ -456,10 +461,11 @@ export default function WorldChaptersPage() {
 
   // 提交世界表单（修改：汇总7个对话主角设定项）
   const handleCreateWorld = async () => {
+  
   setError(null);
   setSuccess(null);
   setWorldLoading(true);
-
+  
   if (!worldForm.name.trim()) {
     setError('世界名称不能为空');
     setWorldLoading(false);
@@ -468,6 +474,7 @@ export default function WorldChaptersPage() {
 
   // 【正则化编码核心】按规则拼接七个字段
   const fields = [
+    { key: '名字', value: protagonistName }, // 新增的名字字段
     { key: '外貌特征', value: protagonistAppearance },
     { key: '服饰风格', value: protagonistClothing },
     { key: '人物背景', value: protagonistBackground },
@@ -476,6 +483,13 @@ export default function WorldChaptersPage() {
     { key: '行为逻辑', value: protagonistBehavior },
     { key: '心理特质', value: protagonistPsychology },
   ];
+  // 校验名字必填
+  if (!protagonistName.trim()) {
+    setError('主角名字不能为空');
+    setWorldLoading(false);
+    return;
+  }
+
 
   // 拼接格式：key###value|||key###value...（空值用"未填写"）
   const combinedMasterSetting = fields
@@ -832,6 +846,19 @@ export default function WorldChaptersPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">对话主角设定</label>
               
+                <div className="mb-3">
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">名字（必填）</label>
+                  <input
+                    type="text"
+                    value={protagonistName}
+                    onChange={(e) => setProtagonistName(e.target.value)}
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-200 outline-none"
+                    placeholder="请输入主角名字（如：艾德里安、林月）"
+                    required // 标记为必填
+                  />
+                </div>
+
+
               {/* 1. 外貌特征（可选） */}
               <div className="mb-3">
                 <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">外貌特征（可选）</label>
