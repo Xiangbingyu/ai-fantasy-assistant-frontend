@@ -103,16 +103,19 @@ export default function WorldChaptersPage() {
 
   // 步骤2：遍历每个字段，用正则提取key和value
   fieldArray.forEach(field => {
-    const match = field.match(/^(.+?)###(.+)$/);
+    // 修改正则表达式，使用[s\S]匹配所有字符（包括换行符）
+    const match = field.match(/^(.+?)###([\s\S]+)$/);
     if (match) {
       const [, fieldKey, fieldValue] = match;
       // 关键：将 fieldKey 断言为 FieldMap 的合法键类型（keyof FieldMap）
       const validKey = fieldKey as keyof FieldMap;
       // 步骤3：将“未填写”转为空字符串
       const realValue = fieldValue === '未填写' ? '' : fieldValue;
-      // 步骤4：只有当键存在于 fieldMap 中时，才赋值（避免无效键）
+      // 步骤4：还原换行符（将转义的换行符\n转回实际换行符）
+      const restoredValue = realValue.replace(/\\n/g, '\n');
+      // 步骤5：只有当键存在于 fieldMap 中时，才赋值（避免无效键）
       if (validKey in fieldMap) {
-        result[fieldMap[validKey] as keyof typeof result] = realValue;
+        result[fieldMap[validKey] as keyof typeof result] = restoredValue;
       }
     }
     });
@@ -492,8 +495,13 @@ export default function WorldChaptersPage() {
 
 
   // 拼接格式：key###value|||key###value...（空值用"未填写"）
+  // 注意：对字段值中的换行符进行转义处理，避免影响分隔符
   const combinedMasterSetting = fields
-    .map(field => `${field.key}###${field.value || '未填写'}`)
+    .map(field => {
+      // 对字段值中的换行符进行转义，替换为\n字符串
+      const escapedValue = (field.value || '未填写').replace(/\n/g, '\\n');
+      return `${field.key}###${escapedValue}`;
+    })
     .join('|||');
 
   // 提交给后端的参数
