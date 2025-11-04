@@ -606,7 +606,7 @@ export default function WorldChaptersPage() {
         const messagePayload = {
           user_id: currentUserId, // 发送者ID（当前用户）
           role: "user", // 角色（固定为user，按接口示例）
-          // 消息内容：在章节开篇前添加"开场白："前缀
+          // 消息内容：结合章节开篇和背景，生成初始请求（可自定义）
           content: `开场白：${chapter.opening || '无'}`,
           create_time: new Date().toISOString() // 当前时间（ISO格式）
         };
@@ -665,7 +665,7 @@ export default function WorldChaptersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-6 transition-colors duration-300">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-6 transition-colors duration-300" style={{fontSize: '18px'}}>
       {/* Toast提示（保持不变） */}
       {showChapterToast && (
         <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg z-50">
@@ -694,7 +694,7 @@ export default function WorldChaptersPage() {
               height="28"
               viewBox="0 0 24 24"
               fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+              xmlns="http://www.w3.org/2000/svg "
               style={{ transition: 'transform 0.3s ease', cursor: 'pointer' }}
               onMouseEnter={(e) => (e.currentTarget as SVGElement).style.transform = 'rotate(5deg)'}
               onMouseLeave={(e) => (e.currentTarget as SVGElement).style.transform = 'rotate(0)'}
@@ -733,7 +733,7 @@ export default function WorldChaptersPage() {
         {error && (
           <div className="bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 p-4 rounded-lg mb-6 shadow-sm border border-rose-100 dark:border-rose-800/50 transition-all duration-300">
             <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg ">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
               <span>{error}</span>
@@ -744,7 +744,7 @@ export default function WorldChaptersPage() {
         {success && (
           <div className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 p-4 rounded-lg mb-6 shadow-sm border border-emerald-100 dark:border-emerald-800/50 transition-all duration-300">
             <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg ">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
               </svg>
               <span>{success}</span>
@@ -755,7 +755,7 @@ export default function WorldChaptersPage() {
         {/* 创建世界板块（修改：对话主角设定全部改为input组件） */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 mb-8 transition-all duration-300 hover:shadow-lg">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-5 flex items-center gap-2">
-            <svg className="w-5 h-5 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <svg className="w-5 h-5 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg ">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
             </svg>
             创建新世界
@@ -764,7 +764,7 @@ export default function WorldChaptersPage() {
           <div className="space-y-5">
             {/* 创建世界表单内容（保持不变） */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">世界名称 *</label>
+              <label className="block text-xl font-medium text-gray-700 dark:text-gray-300 mb-1.5">世界名称 *</label>
               <input
                 type="text"
                 name="name"
@@ -776,7 +776,7 @@ export default function WorldChaptersPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">标签</label>
+              <label className="block text-xl font-medium text-gray-700 dark:text-gray-300 mb-1.5">标签</label>
               <form onSubmit={handleTagInput} className="flex gap-2 mb-3">
                 <input
                   type="text"
@@ -789,7 +789,7 @@ export default function WorldChaptersPage() {
                   type="submit"
                   className="px-4 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-all duration-200 flex items-center gap-1.5 shadow-sm"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg ">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                   </svg>
                   添加
@@ -809,7 +809,7 @@ export default function WorldChaptersPage() {
                       className="ml-1.5 text-indigo-500 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200 transition-colors"
                       aria-label={`删除标签 ${tag}`}
                     >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg ">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
                       </svg>
                     </button>
@@ -832,7 +832,7 @@ export default function WorldChaptersPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">世界观描述</label>
+              <label className="block text-xl font-medium text-gray-700 dark:text-gray-300 mb-1.5">世界观描述</label>
               <textarea
                 name="worldview"
                 value={worldForm.worldview}
@@ -843,109 +843,109 @@ export default function WorldChaptersPage() {
             </div>
 
             {/* 【修改：对话主角设定全部改为input组件】 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">对话主角设定</label>
+            {/* 【修改：对话主角设定 - 优化输入框高度，保留自动换行】 */}
+            <div className="mb-6">
+              <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">核心对话人物设定</h3>
               
-                <div className="mb-3">
-                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">名字（必填）</label>
-                  <input
-                    type="text"
-                    value={protagonistName}
-                    onChange={(e) => setProtagonistName(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-200 outline-none"
-                    placeholder="请输入主角名字（如：艾德里安、林月）"
-                    required // 标记为必填
-                  />
-                </div>
-
-
-              {/* 1. 外貌特征（可选） */}
               <div className="mb-3">
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">外貌特征（可选）</label>
+                <label className="block text-xl-text-gray-500 dark:text-gray-400 mb-1">名字（必填）</label>
                 <input
                   type="text"
-                  value={protagonistAppearance}
-                  onChange={(e) => setProtagonistAppearance(e.target.value)}
+                  value={protagonistName}
+                  onChange={(e) => setProtagonistName(e.target.value)}
                   className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-200 outline-none"
-                  placeholder="如：银发紫眸、身高185cm、左脸颊有疤痕"
-                />
-              </div>
-
-              {/* 2. 服饰风格（可选） */}
-              <div className="mb-3">
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">服饰风格（可选）</label>
-                <input
-                  type="text"
-                  value={protagonistClothing}
-                  onChange={(e) => setProtagonistClothing(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-200 outline-none"
-                  placeholder="如：复古宫廷风、机能风工装、中式汉服"
-                />
-              </div>
-
-              {/* 3. 人物背景（可选） */}
-              <div className="mb-3">
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">人物背景（可选）</label>
-                <input
-                  type="text"
-                  value={protagonistBackground}
-                  onChange={(e) => setProtagonistBackground(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-200 outline-none"
-                  placeholder="如：前帝国将军，因叛国罪被流放，暗中组建反抗军"
-                />
-              </div>
-
-              {/* 4. 性格特征（可选） */}
-              <div className="mb-3">
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">性格特征（可选）</label>
-                <input
-                  type="text"
-                  value={protagonistPersonality}
-                  onChange={(e) => setProtagonistPersonality(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-200 outline-none"
-                  placeholder="如：外冷内热、偏执多疑、乐观开朗"
-                />
-              </div>
-
-              {/* 5. 语言风格（可选） */}
-              <div className="mb-3">
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">语言风格（可选）</label>
-                <input
-                  type="text"
-                  value={protagonistLanguage}
-                  onChange={(e) => setProtagonistLanguage(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-200 outline-none"
-                  placeholder="如：简洁干练、幽默风趣、书面化表达"
-                />
-              </div>
-
-              {/* 6. 行为逻辑（可选） */}
-              <div className="mb-3">
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">行为逻辑（可选）</label>
-                <input
-                  type="text"
-                  value={protagonistBehavior}
-                  onChange={(e) => setProtagonistBehavior(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-200 outline-none"
-                  placeholder="如：遇到危险优先保护同伴、决策前习惯分析利弊"
-                />
-              </div>
-
-              {/* 7. 心理特质（可选） */}
-              <div>
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">心理特质（可选）</label>
-                <input
-                  type="text"
-                  value={protagonistPsychology}
-                  onChange={(e) => setProtagonistPsychology(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-200 outline-none"
-                  placeholder="如：安全感缺失、追求完美主义、强烈的正义感"
+                  placeholder="请输入主角名字（如：艾德里安、林月）"
+                  required
                 />
               </div>
             </div>
 
+
+            {/* 1. 外貌特征（可选）- 低初始高度，自动换行 */}
+            <div className="mb-3">
+              <label className="block text-xl text-gray-500 dark:text-gray-400 mb-1">外貌特征（可选）</label>
+              <textarea
+                value={protagonistAppearance}
+                onChange={(e) => setProtagonistAppearance(e.target.value)}
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-200 outline-none resize-y"
+                placeholder="如：银发紫眸、身高185cm、左脸颊有疤痕。可描述五官、身材、特殊标记等。"
+                rows={4} 
+              />
+            </div>
+
+            {/* 2. 服饰风格（可选）- 低初始高度，自动换行 */}
+            <div className="mb-3">
+              <label className="block text-xl text-gray-500 dark:text-gray-400 mb-1">服饰风格（可选）</label>
+              <textarea
+                value={protagonistClothing}
+                onChange={(e) => setProtagonistClothing(e.target.value)}
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-200 outline-none resize-y"
+                placeholder="如：复古宫廷风，常穿深蓝色刺绣马甲配白色蕾丝衬衫，腰间系鎏金怀表链。"
+                rows={4}
+              />
+            </div>
+
+            {/* 3. 人物背景（可选）- 稍高但不夸张，自动换行 */}
+            <div className="mb-3">
+              <label className="block text-xl text-gray-500 dark:text-gray-400 mb-1">人物背景（可选）</label>
+              <textarea
+                value={protagonistBackground}
+                onChange={(e) => setProtagonistBackground(e.target.value)}
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-200 outline-none resize-y"
+                placeholder="如：前帝国将军，因揭发宫廷阴谋被诬陷叛国罪流放。曾参与三次边境战争，手下有秘密亲兵。"
+                rows={4} 
+              />
+            </div>
+
+            {/* 4. 性格特征（可选）- 低初始高度，自动换行 */}
+            <div className="mb-3">
+              <label className="block text-xl text-gray-500 dark:text-gray-400 mb-1">性格特征（可选）</label>
+              <textarea
+                value={protagonistPersonality}
+                onChange={(e) => setProtagonistPersonality(e.target.value)}
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-200 outline-none resize-y"
+                placeholder="如：外冷内热，表面疏离，实则重视身边人。决策果断但不鲁莽，习惯观察细节。"
+                rows={4}
+              />
+            </div>
+
+            {/* 5. 语言风格（可选）- 低初始高度，自动换行 */}
+            <div className="mb-3">
+              <label className="block text-xl text-gray-500 dark:text-gray-400 mb-1">语言风格（可选）</label>
+              <textarea
+                value={protagonistLanguage}
+                onChange={(e) => setProtagonistLanguage(e.target.value)}
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-200 outline-none resize-y"
+                placeholder="如：说话简洁干练，少用修饰词，句尾常带反问。对长辈用敬语，态度直接。"
+                rows={4}
+              />
+            </div>
+
+            {/* 6. 行为逻辑（可选）- 低初始高度，自动换行 */}
+            <div className="mb-3">
+              <label className="block text-xl text-gray-500 dark:text-gray-400 mb-1">行为逻辑（可选）</label>
+              <textarea
+                value={protagonistBehavior}
+                onChange={(e) => setProtagonistBehavior(e.target.value)}
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-200 outline-none resize-y"
+                placeholder="如：遇危险先找掩体，再判断敌人弱点。决策前列利弊清单，优先低风险方案。"
+                rows={4}
+              />
+            </div>
+
+            {/* 7. 心理特质（可选）- 低初始高度，自动换行 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2.5">其余角色</label>
+              <label className="block text-xl text-gray-500 dark:text-gray-400 mb-1">心理特质（可选）</label>
+              <textarea
+                value={protagonistPsychology}
+                onChange={(e) => setProtagonistPsychology(e.target.value)}
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-200 outline-none resize-y"
+                placeholder="如：因童年被弃，缺乏安全感，通过掌控环境获稳定感。有正义感，常陷入亲友与正义的矛盾。"
+                rows={4}
+              />
+            </div>
+            <div>
+              <label className="block text-xl font-medium text-gray-700 dark:text-gray-300 mb-2.5">其余角色</label>
 
               {characters.map((char, index) => (
                 <div key={char.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-3.5 bg-gray-50 dark:bg-gray-800/50 transition-all duration-200 hover:border-indigo-200 dark:hover:border-indigo-700/50">
@@ -958,7 +958,7 @@ export default function WorldChaptersPage() {
                       className="text-sm text-rose-500 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                       aria-label={`删除角色 ${index + 1}`}
                     >
-                      <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg ">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                       </svg>
                     </button>
@@ -988,7 +988,7 @@ export default function WorldChaptersPage() {
                 onClick={addCharacter}
                 className="mt-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-200 flex items-center gap-1.5 text-sm shadow-sm"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg ">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                 </svg>
                 + 添加角色
@@ -1002,14 +1002,14 @@ export default function WorldChaptersPage() {
             >
               {worldLoading ? (
                 <>
-                  <svg className="w-4.5 h-4.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <svg className="w-4.5 h-4.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg ">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                   </svg>
                   创建中...
                 </>
               ) : (
                 <>
-                  <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg ">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
                 </svg>
                   创建世界
@@ -1022,7 +1022,7 @@ export default function WorldChaptersPage() {
         {/* 章节管理板块：关键修改2——删除按钮添加enterFrom权限控制 */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-all duration-300 hover:shadow-lg">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-5 flex items-center gap-2">
-            <svg className="w-5 h-5 text-emerald-500 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <svg className="w-5 h-5 text-emerald-500 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg ">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
             </svg>
             章节管理
@@ -1065,12 +1065,12 @@ export default function WorldChaptersPage() {
                       <h3 className="font-medium text-gray-800 dark:text-white">章节 {index + 1}</h3>
                       {/* 章节状态标签 */}
                       {chapter.isSubmitted && (
-                        <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-full">
+                        <span className="text-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-full">
                           已提交（ID: {chapter.apiId}）
                         </span>
                       )}
                       {index === 0 && !chapter.isSubmitted && (
-                        <span className="text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/50">
+                        <span className="text-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/50">
                           默认章节（未提交）
                         </span>
                       )}
@@ -1099,12 +1099,12 @@ export default function WorldChaptersPage() {
                       >
                         {chapterDeletingIds[chapter.id] ? (
                           // 加载中：显示旋转图标
-                          <svg className="w-4.5 h-4.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <svg className="w-4.5 h-4.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg ">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                           </svg>
                         ) : (
                           // 正常状态：显示删除图标
-                          <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg ">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                           </svg>
                         )}
@@ -1147,7 +1147,7 @@ export default function WorldChaptersPage() {
                   disabled={!hasCreatedChapters}
                   className="flex-1 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-200 flex items-center justify-center gap-1.5 text-sm shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg ">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                   </svg>
                   + 添加新章节
@@ -1160,14 +1160,14 @@ export default function WorldChaptersPage() {
                 >
                   {chapterLoading ? (
                     <>
-                      <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg ">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                       </svg>
                       创建中...
                     </>
                   ) : (
                     <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg ">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                       </svg>
                       创建章节
@@ -1180,7 +1180,7 @@ export default function WorldChaptersPage() {
             // 未创建世界提示（保持不变）
             <div className="text-center py-10 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700 transition-all duration-300">
               <div className="w-16 h-16 mx-auto mb-4 text-gray-400 dark:text-gray-500">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg ">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
                 </svg>
               </div>

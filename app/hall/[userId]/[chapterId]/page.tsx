@@ -140,8 +140,7 @@ export default function ChapterPage() {
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [novels, setNovels] = useState<NovelRecord[]>([]);
   // 新增：世界与章节上下文（供 LLM 使用）
-  const [worldContext, setWorldContext] = useState<{
-    worldview?: string;
+  const [worldContext, setWorldContext] = useState<{worldview?: string;
     master_sitting?: string; // 从 world.master_setting 映射
     main_characters?: any;
   } | null>(null);
@@ -151,10 +150,19 @@ export default function ChapterPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editText, setEditText] = useState<string>('');
   const [saving, setSaving] = useState<boolean>(false);
+  // 新增：剧情分析相关状态
+  const [storyAnalysis, setStoryAnalysis] = useState<string>('');
+  const [analysisLoading, setAnalysisLoading] = useState<boolean>(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [lastAnalysisCount, setLastAnalysisCount] = useState<number>(0);
 
   // 新增：故事弹窗相关状态
   const [selectedNovel, setSelectedNovel] = useState<NovelRecord | null>(null);
   const [isNovelModalOpen, setIsNovelModalOpen] = useState<boolean>(false);
+  
+  // 新增：剧情引导输入状态
+  const [storyGuide, setStoryGuide] = useState<string>('');
+  const [isSavingGuide, setIsSavingGuide] = useState<boolean>(false);
 
   // 建议面板状态
   const [suggestions, setSuggestions] = useState<Array<{ content: string }>>([]);
@@ -356,6 +364,14 @@ export default function ChapterPage() {
     }
   }, [editingId]);
 
+  // 初始化时检查是否已有消息，如果有足够消息则进行分析
+  useEffect(() => {
+    if (!loading && messages.length >= 30 && lastAnalysisCount === 0) {
+      // 延迟分析，避免阻塞初始化
+      setTimeout(() => analyzeCurrentStory(), 1000);
+    }
+  }, [loading, messages.length, lastAnalysisCount]);
+
   // 回溯：删除该消息及之后所有（数据库删除，前端保留当前行，并进入编辑模式）
   const handleRollback = async (fromId: number) => {
     // 若回溯到占位气泡（负ID），仅前端移除并退出编辑
@@ -368,6 +384,9 @@ export default function ChapterPage() {
       return;
     }
     try {
+      // 记录回溯前的消息数量
+      const beforeRollbackCount = messages.filter(m => m.id > 0).length;
+      
       await fetch(`/api/db/chapters/${chapterId}/messages?id=${fromId}`, { method: 'DELETE' });
       const currentIndex = messages.findIndex((m) => m.id === fromId);
       const current = currentIndex >= 0 ? messages[currentIndex] : undefined;
@@ -380,9 +399,73 @@ export default function ChapterPage() {
       setEditingId(fromId);
       // 移除前缀，让用户编辑时不看到"正文："或"开场白："
       setEditText(current?.content.replace(/^(正文：|开场白：)/, '') ?? '');
-      // 进入编辑态后，建议获取将由 useEffect 自动触发
+      
+      // 重新获取消息，计算回溯后的消息数量
+      const histRes = await fetch(`/api/db/chapters/${chapterId}/messages`);
+      const allMsgs = (await histRes.json()) as ConversationMessage[];
+      const canonical = allMsgs.filter((m) => m.id > 0);
+      const afterRollbackCount = canonical.length;
+      
+      // 只有当回溯导致消息数量发生显著变化且消息数量大于30时，才考虑重新分析
+      // 注意：不清除现有的分析结果，让用户在编辑时仍然可以参考
+      const messageCountDiff = beforeRollbackCount - afterRollbackCount;
+      if (afterRollbackCount >= 30 && messageCountDiff > 5 && !analysisLoading) {
+        // 延迟分析，让用户有时间编辑
+        setTimeout(() => analyzeCurrentStory(), 1000);
+      }
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  // 新增：分析当前剧情的函数
+  const analyzeCurrentStory = async () => {
+    setAnalysisLoading(true);
+    setAnalysisError(null);
+    try {
+      // 获取所有已入库的消息（按ID升序）
+      const histRes = await fetch(`/api/db/chapters/${chapterId}/messages`);
+      const allMsgs = (await histRes.json()) as ConversationMessage[];
+      if (!histRes.ok) {
+        throw new Error('获取消息失败');
+      }
+      const canonical = allMsgs.filter((m) => m.id > 0);
+      const ordered = sortByIdAsc(canonical);
+      const history = ordered.map((m) => ({
+        role: m.role === 'ai' ? 'assistant' : 'user',
+        content: m.content,
+      }));
+
+      // 调用剧情分析接口
+      const analyzeRes = await fetch(`/api/chat/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: history,
+          worldview: worldContext?.worldview,
+          master_sitting: worldContext?.master_sitting,
+          main_characters: worldContext?.main_characters,
+          background: chapter?.background,
+        }),
+      });
+      
+      const analyzeData = await analyzeRes.json();
+      if (!analyzeRes.ok) {
+        throw new Error(analyzeData?.error || '剧情分析失败');
+      }
+
+      // 保存分析结果
+      setStoryAnalysis(analyzeData?.analysis || '');
+      // 更新最后分析时的消息数量，使用30的倍数作为标记
+      // 这样可以确保在60轮等正确轮次触发分析
+      const count = ordered.length;
+      const roundedCount = Math.floor(count / 30) * 30;
+      setLastAnalysisCount(roundedCount > 0 ? roundedCount : count);
+      
+    } catch (e) {
+      setAnalysisError(e instanceof Error ? e.message : '分析异常');
+    } finally {
+      setAnalysisLoading(false);
     }
   };
 
@@ -436,6 +519,8 @@ export default function ChapterPage() {
           master_sitting: worldContext?.master_sitting,
           main_characters: worldContext?.main_characters,
           background: chapter?.background,
+          story_analysis: storyAnalysis, // 传入剧情分析结果
+          story_guide: storyGuide, // 传入剧情引导内容
         }),
       });
       const chatData = await chatRes.json();
@@ -466,6 +551,26 @@ export default function ChapterPage() {
 
       // 在前端追加AI气泡（保持按 id 升序）
       setMessages((prev) => sortByIdAsc([...prev, createdAiMsg]));
+
+      // 检查是否需要进行剧情分析（每30轮对话进行一次）
+      const updatedCanonical = [...canonical, createdAiMsg];
+      const messageCount = updatedCanonical.length;
+      
+      // 确保在30、60、90等每30的倍数时都触发分析
+      // 添加分析中状态检查，避免重复触发
+      // 优化触发条件，确保在正确的轮次触发
+      const targetRound = Math.floor(messageCount / 30) * 30;
+      const shouldTriggerAnalysis = 
+        !analysisLoading &&  // 确保分析不在进行中
+        messageCount >= 30 &&  // 至少需要30条消息
+        (targetRound > 0 && targetRound !== lastAnalysisCount ||  // 达到新的30倍数轮次
+         lastAnalysisCount === 0 ||  // 首次有足够消息
+         messageCount < lastAnalysisCount);  // 回溯后重新达到30行
+      
+      if (shouldTriggerAnalysis) {
+        // 延迟分析，避免阻塞UI
+        setTimeout(() => analyzeCurrentStory(), 500);
+      }
 
       // AI回复后，立即插入一个新的空气泡让用户继续输入
       addEmptyInputBubble(); // 进入编辑态后 useEffect 会自动拉取建议
@@ -859,6 +964,111 @@ export default function ChapterPage() {
   }, [messages, hoveredId, loading, error, editingId, editText, saving, generatedStoryContent, generateStoryTitle]);
 
   // 建议面板（位于写作区与右侧栏之间）
+  // 左侧栏组件 - 包含剧情分析与剧情引导
+  const leftSidebar = useMemo(() => {
+    return (
+      <aside
+        style={{
+          width: 320,
+          borderRight: '1px solid #eee',
+          padding: 16,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 16,
+          background: '#fafafa',
+          height: '100vh',
+          overflowY: 'auto',
+        }}
+      >
+        {/* 目前剧情分析部分 */}
+        <section
+          style={{
+            border: '1px solid #e5e7eb',
+            borderRadius: 8,
+            padding: 12,
+            background: '#fff',
+          }}
+        >
+          <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 8 }}>目前剧情分析</div>
+          {analysisLoading ? (
+            <div style={{ whiteSpace: 'pre-wrap', color: '#6b7280', fontSize: 14, lineHeight: 1.5 }}>
+              正在分析当前剧情发展...
+            </div>
+          ) : analysisError ? (
+            <div style={{ whiteSpace: 'pre-wrap', color: '#ef4444', fontSize: 14, lineHeight: 1.5 }}>
+              {analysisError}
+            </div>
+          ) : storyAnalysis ? (
+            <div style={{ whiteSpace: 'pre-wrap', color: '#111827', fontSize: 14, lineHeight: 1.5, maxHeight: '400px', overflowY: 'auto' }}>
+              {storyAnalysis}
+            </div>
+          ) : (
+            <div style={{ whiteSpace: 'pre-wrap', color: '#6b7280', fontSize: 14, lineHeight: 1.5 }}>
+              对话达到30轮后将自动进行剧情分析
+            </div>
+          )}
+        </section>
+        
+        {/* 剧情引导部分 */}
+        <section
+          style={{
+            border: '1px solid #e5e7eb',
+            borderRadius: 8,
+            padding: 12,
+            background: '#fff',
+          }}
+        >
+          <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 8 }}>剧情引导</div>
+          <div style={{ whiteSpace: 'pre-wrap', color: '#6b7280', fontSize: 14, lineHeight: 1.5, marginBottom: 8 }}>
+            输入你想要引导的剧情方向，保存后将影响AI的回复生成
+          </div>
+          <textarea
+            value={storyGuide}
+            onChange={(e) => setStoryGuide(e.target.value)}
+            style={{
+              width: '100%',
+              minHeight: '120px',
+              padding: '8px',
+              border: '1px solid #d1d5db',
+              borderRadius: 6,
+              resize: 'vertical',
+              fontSize: 14,
+              marginBottom: 8,
+            }}
+            placeholder="例如：希望角色之间产生冲突，或者推进某个关键情节..."
+          />
+          <button
+            type="button"
+            onClick={() => {
+              setIsSavingGuide(true);
+              // 模拟保存操作
+              setTimeout(() => {
+                setIsSavingGuide(false);
+                alert('剧情引导已保存');
+              }, 500);
+            }}
+            style={{
+              padding: '6px 12px',
+              borderRadius: 6,
+              border: '1px solid #e5e7eb',
+              background: isSavingGuide ? '#f3f4f6' : '#f9fafb',
+              cursor: isSavingGuide ? 'not-allowed' : 'pointer',
+              color: isSavingGuide ? '#9ca3af' : '#374151',
+            }}
+            disabled={isSavingGuide}
+          >
+            {isSavingGuide ? '保存中...' : '保存引导'}
+          </button>
+          {storyGuide && (
+            <div style={{ marginTop: 8, padding: 8, backgroundColor: '#f0f9ff', borderRadius: 4, fontSize: 13 }}>
+              当前引导：{storyGuide.length > 50 ? storyGuide.substring(0, 50) + '...' : storyGuide}
+            </div>
+          )}
+        </section>
+      </aside>
+    );
+  }, [storyAnalysis, analysisLoading, analysisError, storyGuide, isSavingGuide]);
+
   const suggestionPanel = useMemo(() => {
     return (
       <aside
@@ -915,6 +1125,7 @@ export default function ChapterPage() {
         overflow: 'hidden',
       }}
     >
+      {leftSidebar}
       {paper}
       {suggestionPanel}
       {sidebar}
