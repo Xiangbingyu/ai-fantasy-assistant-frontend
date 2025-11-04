@@ -212,7 +212,7 @@ export default function WorldChaptersPage() {
 
   useEffect(() => {
     // 仅当worldId存在且非新建状态时，才请求数据
-    if (!currentWorldId || enterFrom === 'new') return;
+    if (!currentWorldId) return;
 
     const fetchWorldDetail = async () => {
     setWorldLoading(true); // 复用现有加载状态
@@ -607,7 +607,7 @@ export default function WorldChaptersPage() {
           user_id: currentUserId, // 发送者ID（当前用户）
           role: "user", // 角色（固定为user，按接口示例）
           // 消息内容：结合章节开篇和背景，生成初始请求（可自定义）
-          content: `开场白：${chapter.opening || '无'}`,
+          content: `${chapter.opening || '无'}`,
           create_time: new Date().toISOString() // 当前时间（ISO格式）
         };
 
