@@ -4,6 +4,133 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import type { Chapter, ConversationMessage, NovelRecord } from '../../../types/db';
 
+// 格式化核心人物信息函数
+const formatMasterCharacterInfo = (content: string | null | undefined): string => {
+  if (!content) return '';
+  
+  // 解析格式: 名字###白雨|||外貌特征###16 岁，156 cm，45 kg；
+  const result: string[] = [];
+  const sections = content.split('|||');
+  
+  sections.forEach(section => {
+    const [key, value] = section.split('###');
+    if (key && value) {
+      // 确保中文冒号，统一格式
+      const formattedKey = key.replace(/：$/, '') + '：';
+      result.push(`• ${formattedKey} ${value.replace(/；$/, '')}`);
+    }
+  });
+  
+  return result.join('\n');
+};
+
+// 格式化其他人物信息函数
+const formatMainCharacters = (characters: any): string => {
+  if (!characters) return '';
+  
+  // 检查是否已经是字符串
+  if (typeof characters === 'string') {
+    try {
+      // 尝试解析为JSON
+      const parsed = JSON.parse(characters);
+      if (Array.isArray(parsed)) {
+        return formatCharactersArray(parsed);
+      }
+    } catch {
+      // 如果解析失败，返回原始字符串
+      return characters;
+    }
+  }
+  
+  // 如果是数组
+  if (Array.isArray(characters)) {
+    return formatCharactersArray(characters);
+  }
+  
+  return JSON.stringify(characters, null, 2);
+};
+
+// 格式化人物数组
+const formatCharactersArray = (characters: Array<{name?: string; background?: string; [key: string]: any}>): string => {
+  return characters.map((char, index) => {
+    let result = `【人物${index + 1}】`;
+    if (char.name) result += ` ${char.name}`;
+    if (char.background) result += `\n${char.background}`;
+    // 添加其他可能的属性
+    Object.entries(char).forEach(([key, value]) => {
+      if (key !== 'name' && key !== 'background') {
+        result += `\n${key}：${value}`;
+      }
+    });
+    return result;
+  }).join('\n\n');
+};
+
+// 可折叠的世界面板项组件
+const WorldPanelItem = ({ 
+  title, 
+  content, 
+  placeholder, 
+  style, 
+  formatter 
+}: { 
+  title: string; 
+  content: any; 
+  placeholder: string; 
+  style?: React.CSSProperties; 
+  formatter?: (content: any) => string;
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  // 获取显示内容，处理null/undefined情况并应用格式化
+  const rawContent = content || placeholder;
+  const displayContent = formatter ? formatter(rawContent) : (rawContent?.toString() || placeholder);
+  
+  // 如果内容为空或只有占位文本，则不显示展开按钮
+  const hasContent = content != null && content !== '';
+  
+  // 截取内容开头作为预览（最多100个字符）
+  const preview = displayContent.length > 100 
+    ? displayContent.substring(0, 100) + '...' 
+    : displayContent;
+  
+  return (
+    <div style={style}>
+      <div 
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          color: '#6b7280',
+          fontWeight: 500,
+          marginBottom: 4,
+          cursor: hasContent ? 'pointer' : 'default'
+        }}
+        onClick={() => hasContent && setIsExpanded(!isExpanded)}
+      >
+        <span>{title}：</span>
+        {hasContent && (
+          <span style={{ fontSize: 12, color: '#9ca3af' }}>
+            {isExpanded ? '收起 ▲' : '展开 ▼'}
+          </span>
+        )}
+      </div>
+      <div 
+        style={{
+          whiteSpace: 'pre-wrap', 
+          color: '#111827',
+          fontSize: 14,
+          maxHeight: isExpanded ? 'none' : '60px',
+          overflow: isExpanded ? 'visible' : 'hidden',
+          lineHeight: 1.5
+        }}
+      >
+        {isExpanded ? displayContent : preview}
+      </div>
+    </div>
+  );
+};
+
 export default function ChapterPage() {
   const params = useParams<{ userId: string; chapterId: string }>();
   const userId = params.userId;
@@ -504,6 +631,8 @@ export default function ChapterPage() {
           flexDirection: 'column',
           gap: 16,
           background: '#fafafa',
+          height: '100vh',
+          overflowY: 'auto',
         }}
       >
         <section
@@ -520,11 +649,48 @@ export default function ChapterPage() {
             <span>{chapter?.name ?? `章节 ${chapterId}`}</span>
           </div>
           <div>
-            <div style={{ color: '#6b7280', marginBottom: 4 }}>背景：</div>
+            <div style={{ color: '#6b7280', marginBottom: 4 }}>玩家信息：</div>
             <div style={{ whiteSpace: 'pre-wrap', color: '#111827' }}>
-              {chapter?.background ?? '（暂未获取到背景信息）'}
+              {chapter?.background ?? '（暂未获取到玩家信息）'}
             </div>
           </div>
+        </section>
+        
+        {/* 世界面板信息 - 可折叠 */}
+        <section
+          style={{
+            border: '1px solid #e5e7eb',
+            borderRadius: 8,
+            padding: 12,
+            background: '#fff',
+          }}
+        >
+          <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 12 }}>世界面板</div>
+          
+          {/* 世界观 - 可折叠 */}
+          <WorldPanelItem 
+            title="世界观" 
+            content={worldContext?.worldview} 
+            placeholder="暂未获取到世界观信息" 
+          />
+          
+          {/* 核心人物 - 可折叠 */}
+          <WorldPanelItem 
+            title="核心人物" 
+            content={worldContext?.master_sitting} 
+            placeholder="暂未获取到核心人物信息" 
+            style={{ marginTop: '12px' }} 
+            formatter={formatMasterCharacterInfo}
+          />
+          
+          {/* 其他人物 - 可折叠 */}
+          <WorldPanelItem 
+            title="其他人物" 
+            content={worldContext?.main_characters}
+            placeholder="暂未获取到其他人物信息" 
+            style={{ marginTop: '12px' }} 
+            formatter={formatMainCharacters}
+          />
         </section>
 
         <section
