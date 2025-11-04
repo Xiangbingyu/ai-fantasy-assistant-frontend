@@ -84,7 +84,7 @@ export default function WorldHall() {
       fetchUserWorlds();
     }
   }, [currentUserId, allWorlds]);
-
+ 
   // 筛选逻辑
   const filteredWorlds = allWorlds
     .filter(world => {
@@ -151,6 +151,29 @@ export default function WorldHall() {
     }
   };
 
+  const deleteWorld = async (worldId: number) => {
+    setError(null);
+    setLoading(true);
+     
+    try{                               // , methods=['DELETE'])'
+      const res = await fetch(`/api/db/worlds/${worldId}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || '删除世界失败');
+      }
+      // 前端同步更新列表
+      setAllWorlds(prev => prev.filter(world => world.id !== worldId));
+      setMyWorlds(prev => prev.filter(world => world.id !== worldId));
+    }catch (err) {
+      const errMsg = err instanceof Error ? err.message : '删除世界异常';
+      setError(errMsg);
+      console.error(errMsg, err);
+    }finally {
+      setLoading(false);
+    }
+
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white p-4">
@@ -209,10 +232,11 @@ export default function WorldHall() {
     </div>
 
       <div className="flex flex-1 container mx-auto px-4 py-6 gap-6">
-        <div className="w-[280px] bg-white rounded-xl shadow-sm p-6 flex-shrink-0">
+        <div className="w-[350px] bg-white rounded-xl shadow-sm p-6 flex-shrink-0">
           <MyWorldsSidebar
             myWorlds={myWorlds}
             onSelectWorld={(worldId) => startCreation(worldId, 'sidebar')}
+            onDeleteWorld={deleteWorld}
           />
         </div>
 
