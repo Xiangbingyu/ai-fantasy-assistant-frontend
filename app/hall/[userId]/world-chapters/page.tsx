@@ -606,8 +606,8 @@ export default function WorldChaptersPage() {
         const messagePayload = {
           user_id: currentUserId, // 发送者ID（当前用户）
           role: "user", // 角色（固定为user，按接口示例）
-          // 消息内容：结合章节开篇和背景，生成初始请求（可自定义）
-          content: `${chapter.opening || '无'}`,
+          // 消息内容：在章节开篇前添加"开场白："前缀
+          content: `开场白：${chapter.opening || '无'}`,
           create_time: new Date().toISOString() // 当前时间（ISO格式）
         };
 

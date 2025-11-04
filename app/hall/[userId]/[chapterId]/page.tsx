@@ -251,7 +251,8 @@ export default function ChapterPage() {
         return sortByIdAsc(prev.slice(0, idx + 1));
       });
       setEditingId(fromId);
-      setEditText(current?.content ?? '');
+      // 移除前缀，让用户编辑时不看到"正文："或"开场白："
+      setEditText(current?.content.replace(/^(正文：|开场白：)/, '') ?? '');
       // 进入编辑态后，建议获取将由 useEffect 自动触发
     } catch (e) {
       console.error(e);
@@ -270,7 +271,8 @@ export default function ChapterPage() {
         body: JSON.stringify({
           user_id: Number(userId),
           role: 'user',
-          content: editText,
+          // 在用户输入内容前添加"正文"前缀，先去掉已存在的前缀避免重复
+          content: `正文：${editText.replace(/^正文：/, '')}`,
         }),
       });
       const createdUserMsg = await userRes.json();
@@ -326,7 +328,8 @@ export default function ChapterPage() {
         body: JSON.stringify({
           user_id: Number(userId),
           role: 'ai',
-          content: aiContent,
+          // 在AI回复内容前添加"正文"前缀，先去掉已存在的前缀避免重复
+          content: `正文：${aiContent.replace(/^正文：/, '')}`,
         }),
       });
       const createdAiMsg = await aiSaveRes.json();
@@ -656,7 +659,9 @@ export default function ChapterPage() {
                         placeholder="编辑当前内容，按 Enter 提交"
                       />
                     ) : (
-                      <div style={{ flex: 1, whiteSpace: 'pre-wrap' }}>{m.content}</div>
+                      <div style={{ flex: 1, whiteSpace: 'pre-wrap' }}>
+                        {m.content.replace(/^(正文：|开场白：)/, '')}
+                      </div>
                     )}
                     {hoveredId === m.id && editingId !== m.id && (
                       <button
