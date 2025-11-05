@@ -222,6 +222,21 @@ export default function WorldHall() {
         />
 
       <div className="bg-white py-3 transition-all duration-300 w-full">
+        {/* 使用说明区域 */}
+        <div className="container mx-auto px-4 mb-4">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded-r-lg flex items-start gap-3">
+            <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <div>
+              <h3 className="text-sm font-medium text-blue-800 dark:text-blue-300">使用说明</h3>
+              <p className="mt-1 text-sm text-blue-700 dark:text-blue-400">
+                点击「公开世界」中的卡片引用模板进行创作，或点击下方「立即创作」开始全新世界。左侧「我的世界」可管理您已创建的世界。
+              </p>
+            </div>
+          </div>
+        </div>
+        
         <FilterBar
         sortBy={sortBy}
         setSortBy={setSortBy}
