@@ -17,7 +17,9 @@ const formatMasterCharacterInfo = (content: string | null | undefined): string =
     if (key && value) {
       // 确保中文冒号，统一格式
       const formattedKey = key.replace(/：$/, '') + '：';
-      result.push(`• ${formattedKey} ${value.replace(/；$/, '')}`);
+      // 关键修改：将转义的换行符\n转换为实际换行符
+      const processedValue = value.replace(/；$/, '').replace(/\\n/g, '\n');
+      result.push(`• ${formattedKey} ${processedValue}`);
     }
   });
   
@@ -37,8 +39,8 @@ const formatMainCharacters = (characters: any): string => {
         return formatCharactersArray(parsed);
       }
     } catch {
-      // 如果解析失败，返回原始字符串
-      return characters;
+      // 如果解析失败，返回原始字符串（但要处理转义换行符）
+      return characters.replace(/\\n/g, '\n');
     }
   }
   
@@ -47,7 +49,7 @@ const formatMainCharacters = (characters: any): string => {
     return formatCharactersArray(characters);
   }
   
-  return JSON.stringify(characters, null, 2);
+  return JSON.stringify(characters, null, 2).replace(/\\n/g, '\n');
 };
 
 // 格式化人物数组
@@ -55,11 +57,17 @@ const formatCharactersArray = (characters: Array<{name?: string; background?: st
   return characters.map((char, index) => {
     let result = `【人物${index + 1}】`;
     if (char.name) result += ` ${char.name}`;
-    if (char.background) result += `\n${char.background}`;
+    if (char.background) {
+      // 关键修改：处理背景信息中的转义换行符
+      const processedBackground = char.background.replace(/\\n/g, '\n');
+      result += `\n${processedBackground}`;
+    }
     // 添加其他可能的属性
     Object.entries(char).forEach(([key, value]) => {
       if (key !== 'name' && key !== 'background') {
-        result += `\n${key}：${value}`;
+        // 确保值是字符串并处理转义换行符
+        const processedValue = String(value).replace(/\\n/g, '\n');
+        result += `\n${key}：${processedValue}`;
       }
     });
     return result;
