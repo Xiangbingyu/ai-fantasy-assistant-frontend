@@ -256,7 +256,8 @@ export default function WorldChaptersPage() {
         user_id: currentUserId,
         name: worldDetail.name || '',
         tags: worldDetail.tags || [],
-        is_public: worldDetail.is_public || false,
+        // 根据需求，无论从哪里进入，公开状态都默认为false，只有用户手动选择后才会变为true
+        is_public: false,
         worldview: worldDetail.worldview || '',
         master_setting: worldDetail.master_setting || '', // 保留原始编码字符串（可选）
         origin_world_id: worldDetail.origin_world_id || null,
