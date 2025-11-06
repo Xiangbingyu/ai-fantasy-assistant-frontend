@@ -261,7 +261,7 @@ export default function WorldChaptersPage() {
         worldview: worldDetail.worldview || '',
         master_setting: worldDetail.master_setting || '', // 保留原始编码字符串（可选）
         origin_world_id: worldDetail.origin_world_id || null,
-        popularity: worldDetail.popularity || 0,
+        popularity: 0, // 新建世界时强制设为0，避免复用原世界的popularity
         characters: worldDetail.main_characters || []
       });
 
@@ -314,7 +314,7 @@ export default function WorldChaptersPage() {
     worldview: '', // 空白初始值
     master_setting: '', // 空白初始值
     origin_world_id: null,
-    popularity: 0,
+    popularity: 0, // 新建世界时默认为0
     characters: [] // 空白初始值
   });
 
@@ -468,6 +468,9 @@ export default function WorldChaptersPage() {
   setError(null);
   setSuccess(null);
   setWorldLoading(true);
+  
+  // 记录是否需要增加popularity（如果是已有世界）
+  const shouldIncreasePopularity = !!currentWorldId && enterFrom !== 'new';
   
   // 校验必填字段
   if (!worldForm.name.trim()) {
@@ -624,16 +627,35 @@ export default function WorldChaptersPage() {
       if (enterFrom === 'card') {
         setEnterFrom('new');
       }
+      
+      // 确保新创建的世界popularity始终为0
+      setWorldForm(prev => ({
+        ...prev,
+        popularity: 0
+      }));
 
       setSuccess('世界和章节创建成功！');
-      setShowChapterToast(true);
-      setTimeout(() => setShowChapterToast(false), 3000);
+            setShowChapterToast(true);
+            setTimeout(() => setShowChapterToast(false), 3000);
 
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '创建世界或章节时发生错误');
-    } finally {
-      setWorldLoading(false);
-    }
+            // 如果是已有世界且不是新建模式，调用增加popularity的接口
+            if (shouldIncreasePopularity && currentWorldId) {
+              try {
+                await fetch(`/api/db/worlds/${currentWorldId}/increase-popularity`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' }
+                });
+                console.log('世界popularity已增加');
+              } catch (popularityError) {
+                console.warn('增加popularity失败，但不影响主要功能', popularityError);
+              }
+            }
+
+        } catch (err) {
+            setError(err instanceof Error ? err.message : '创建世界或章节时发生错误');
+        } finally {
+            setWorldLoading(false);
+        }
   };
 
   // 移除handleCreateChapters函数，章节将与世界一起创建
