@@ -315,17 +315,16 @@ export default function WorldHall() {
         </main>
       </div>
 
-        <div className="py-30 px-4">
-            <div className="container mx-auto flex justify-center">
-                <button
-                onClick={createWorld}
-                className="px-10 py-4 rounded-lg border border-gray-800 bg-gray-800 text-white 
-                            hover:bg-gray-700 hover:border-gray-700 transition-all duration-300 
-                            text-lg font-medium shadow-md hover:shadow-lg transform hover:scale-105"
-                >
-                立即创作
-                </button>
-            </div>
+        {/* 立即创作按钮 - 固定在屏幕中下方 */}
+        <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-50">
+            <button
+            onClick={createWorld}
+            className="px-10 py-4 rounded-lg border border-gray-800 bg-gray-800 text-white 
+                        hover:bg-gray-700 hover:border-gray-700 transition-all duration-300 
+                        text-lg font-medium shadow-md hover:shadow-lg transform hover:scale-105"
+            >
+            立即创作
+            </button>
         </div>
     </div>
   );
