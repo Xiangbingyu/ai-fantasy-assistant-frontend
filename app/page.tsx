@@ -405,7 +405,7 @@ export default function LoginPage() {
           </p>
         )}
 
-        {/* 底部说明：增加互动效果 */}
+        {/* 底部说明：个人项目信息 */}
         <div style={{ textAlign: 'center' }}>
           <p style={{
             fontSize: '12px',
@@ -413,50 +413,14 @@ export default function LoginPage() {
             margin: '0',
             lineHeight: '1.5',
           }}>
-            已助力 10w+ 创作者完成小说创作
+            个人项目 | 独立开发 | AI小说创作助手
           </p>
-          {/* 可点击的协议链接 */}
           <p style={{
             fontSize: '12px',
             color: '#94a3b8',
             margin: '4px 0 0 0',
           }}>
-            点击登录即表示同意 
-            <span 
-              style={{ 
-                color: '#6366f1', 
-                cursor: 'pointer', 
-                textDecoration: 'underline',
-                margin: '0 4px',
-                transition: 'color 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLSpanElement).style.color = '#8b5cf6';
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLSpanElement).style.color = '#6366f1';
-              }}
-            >
-              《用户协议》
-            </span>
-            和 
-            <span 
-              style={{ 
-                color: '#6366f1', 
-                cursor: 'pointer', 
-                textDecoration: 'underline',
-                margin: '0 4px',
-                transition: 'color 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLSpanElement).style.color = '#8b5cf6';
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLSpanElement).style.color = '#6366f1';
-              }}
-            >
-              《隐私政策》
-            </span>
+            前端：Next.js + React + TypeScript | 后端：Flask
           </p>
         </div>
       </div>
