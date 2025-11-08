@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from './hooks/useAuth';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { user, login, isLoading: authLoading } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -45,42 +47,62 @@ export default function LoginPage() {
       document.head.removeChild(style);
     };
   }, []);
-
-  // 新增：鼠标移动时背景轻微偏移，营造深度感
+  
+  // 新增：实现鼠标移动视差效果
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      const windowWidth = window.innerWidth;
-      const windowHeight = window.innerHeight;
-      // 计算偏移比例（最大偏移10px）
-      const x = (e.clientX / windowWidth - 0.5) * 10;
-      const y = (e.clientY / windowHeight - 0.5) * 10;
-      setBgPosition({ x, y });
+      // 只有在客户端环境下执行
+      if (typeof window !== 'undefined') {
+        const x = (window.innerWidth / 2 - e.clientX) / 50;
+        const y = (window.innerHeight / 2 - e.clientY) / 50;
+        setBgPosition({ x, y });
+      }
     };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    
+    if (typeof window !== 'undefined') {
+      window.addEventListener('mousemove', handleMouseMove);
+    }
+    
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('mousemove', handleMouseMove);
+      }
+    };
   }, []);
+  
+  // 新增：防止已登录用户访问登录页
+  useEffect(() => {
+    // 确保authLoading完成且用户已登录时才跳转
+    if (!authLoading && user && user.id) {
+      router.push(`/hall/${user.id}`);
+    }
+  }, [user, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // 表单验证
+    if (!username.trim()) {
+      setError('请输入用户名');
+      return;
+    }
+    
+    if (!password || password.length < 6) {
+      setError('密码长度不能少于6位');
+      return;
+    }
+    
     setLoading(true);
     setError(null);
 
     try {
-      const res = await fetch('/api/db/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok && data.user_id) {
-        router.push(`/hall/${data.user_id}`);
-      } else {
-        setError(data?.error || '登录失败，请检查账号密码');
+      const success = await login(username, password);
+      if (!success) {
+        setError('登录失败，请检查账号密码');
       }
+      // 登录成功后，useEffect会自动处理路由跳转
     } catch (err) {
+      console.error('登录错误:', err);
       setError('网络连接异常，请稍后重试');
     } finally {
       setLoading(false);

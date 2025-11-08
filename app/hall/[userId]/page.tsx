@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { World, UserWorld, WorldCharacter} from '../../types/db';
 import Navbar from '../components/Navbar';
+import { useRouteProtection } from '../../hooks/useRouteProtection';
 import FilterBar from '../components/FilterBar';
 import MyWorldsSidebar from '../components/MyWorldsSidebar';
 import WorldCard from '../components/WorldCard';
@@ -13,28 +14,33 @@ const DEFAULT_WORLD_COVER = '/images/default-world-cover.png';
 
 export default function WorldHall() {
   const Router = useRouter();
+  const params = useParams<{ userId: string }>();
+  const currentUserId = Number(params.userId || '0');
+  
+  // 添加路由保护，要求用户只能访问自己的页面
+  const { isChecking } = useRouteProtection({ requireOwnership: true });
+  
+  // 所有Hooks必须在条件渲染之前调用
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('热度');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [allWorlds, setAllWorlds] = useState<World[]>([]);
-
   const [myWorlds, setMyWorlds] = useState<World[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hoveredWorldId, setHoveredWorldId] = useState<number | null>(null);
 
-  const params = useParams<{ userId: string }>();
-  const currentUserId = Number(params.userId || '0');
-
   // 1. 获取所有公开世界
   useEffect(() => {
     const fetchAllWorlds = async () => {
+      if (typeof window === 'undefined') return;
+      
       try {
         const res = await fetch('/api/db/worlds');
         if (!res.ok) throw new Error('获取世界列表失败');
         
         const data = await res.json();
-        const worldsWithCovers = data.map((world: World) => ({
+        const worldsWithCovers = (data || []).map((world: World) => ({
           ...world,
           cover_url: DEFAULT_WORLD_COVER
         }));
@@ -43,15 +49,17 @@ export default function WorldHall() {
         const errMsg = err instanceof Error ? err.message : '获取世界数据异常';
         setError(errMsg);
         console.error(errMsg, err);
+        setAllWorlds([]);
       }
     };
 
     fetchAllWorlds();
   }, []);
 
-
   // 2. 获取当前用户的世界
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     if (isNaN(currentUserId) || currentUserId === 0) {
       setError('无效的用户ID');
       setLoading(false);
@@ -63,7 +71,7 @@ export default function WorldHall() {
         const res = await fetch(`/api/db/user-worlds?user_id=${currentUserId}&role=creator`);
         if (!res.ok) throw new Error('获取个人世界失败');
         
-        const userWorlds: UserWorld[] = await res.json();
+        const userWorlds: UserWorld[] = await res.json() || [];
         const userOwnedWorlds = allWorlds.filter(world => 
           userWorlds.some(uw => uw.world_id === world.id)
         ).sort((a, b) => 
@@ -75,6 +83,7 @@ export default function WorldHall() {
         const errMsg = err instanceof Error ? err.message : '获取个人世界异常';
         setError(errMsg);
         console.error(errMsg, err);
+        setMyWorlds([]);
       } finally {
         setLoading(false);
       }
@@ -84,6 +93,15 @@ export default function WorldHall() {
       fetchUserWorlds();
     }
   }, [currentUserId, allWorlds]);
+  
+  // 认证检查中显示加载状态
+  if (isChecking) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white p-4">
+        <div className="text-gray-600 text-lg">正在验证您的访问权限...</div>
+      </div>
+    );
+  }
  
   // 筛选逻辑
   const filteredWorlds = allWorlds
