@@ -48,13 +48,13 @@ export default function LoginPage() {
     };
   }, []);
   
-  // 新增：实现鼠标移动视差效果
+  // 新增：实现鼠标移动视差效果（应用于装饰元素）
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       // 只有在客户端环境下执行
       if (typeof window !== 'undefined') {
-        const x = (window.innerWidth / 2 - e.clientX) / 50;
-        const y = (window.innerHeight / 2 - e.clientY) / 50;
+        const x = (window.innerWidth / 2 - e.clientX) / 100;
+        const y = (window.innerHeight / 2 - e.clientY) / 100;
         setBgPosition({ x, y });
       }
     };
@@ -110,7 +110,7 @@ export default function LoginPage() {
   };
 
   return (
-    // 1. 主题背景：替换为手写稿+墨水纹理，鼠标移动时有视差效果
+    // 1. 主题背景：米白色背景板，添加彩色装饰元素
     <div 
       style={{
         minHeight: '100vh',
@@ -118,31 +118,118 @@ export default function LoginPage() {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '20px',
-        // 小说创作主题背景（手写稿+墨水纹理）
-        backgroundImage: `
-        linear-gradient(rgba(245, 247, 250, 0.92), rgba(245, 247, 250, 0.97)),
-        url('/image/login1.png')
-        `,
-        backgroundBlendMode: 'multiply, overlay',
-        backgroundSize: 'cover, cover',
-        backgroundPosition: `${bgPosition.x}px ${bgPosition.y}px`, // 随鼠标移动偏移
-        backgroundAttachment: 'fixed',
+        backgroundColor: '#f8f5f0', // 米白色背景
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        transition: 'background-position 0.1s ease-out', // 平滑过渡
+        position: 'relative',
+        overflow: 'hidden'
       }}
     >
-      {/* 2. 登录卡片：强化悬浮动画和互动反馈 */}
+        {/* 彩色装饰元素：背景漂浮气泡 */}
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }}>
+          {/* 装饰元素1：圆形气泡 */}
+          <div style={{
+            position: 'absolute',
+            top: '10%',
+            left: '5%',
+            width: '120px',
+            height: '120px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, rgba(255, 65, 125, 0.35), rgba(255, 105, 180, 0.25))',
+            transform: `translate(${bgPosition.x * -0.5}px, ${bgPosition.y * -0.5}px)`,
+            transition: 'transform 0.15s ease-out',
+            boxShadow: '0 4px 20px rgba(255, 105, 180, 0.3)'
+          }}></div>
+          
+          {/* 装饰元素2：矩形方块 */}
+          <div style={{
+            position: 'absolute',
+            top: '60%',
+            left: '80%',
+            width: '100px',
+            height: '100px',
+            borderRadius: '16px',
+            background: 'linear-gradient(135deg, rgba(65, 105, 225, 0.35), rgba(100, 149, 237, 0.25))',
+            transform: `translate(${bgPosition.x * 0.3}px, ${bgPosition.y * 0.3}px) rotate(15deg)`,
+            transition: 'transform 0.15s ease-out',
+            boxShadow: '0 4px 20px rgba(100, 149, 237, 0.3)'
+          }}></div>
+          
+          {/* 装饰元素3：云朵形状 */}
+          <div style={{
+            position: 'absolute',
+            top: '30%',
+            left: '75%',
+            width: '150px',
+            height: '80px',
+            borderRadius: '40px',
+            background: 'linear-gradient(135deg, rgba(50, 205, 50, 0.35), rgba(152, 251, 152, 0.25))',
+            transform: `translate(${bgPosition.x * -0.2}px, ${bgPosition.y * -0.2}px)`,
+            transition: 'transform 0.15s ease-out',
+            boxShadow: '0 4px 20px rgba(152, 251, 152, 0.3)',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '-30px',
+              left: '20px',
+              width: '60px',
+              height: '60px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, rgba(50, 205, 50, 0.35), rgba(152, 251, 152, 0.25))'
+            }}></div>
+            <div style={{
+              position: 'absolute',
+              top: '-20px',
+              left: '70px',
+              width: '70px',
+              height: '70px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, rgba(50, 205, 50, 0.35), rgba(152, 251, 152, 0.25))'
+            }}></div>
+          </div>
+          
+          {/* 装饰元素4：小气泡 */}
+          <div style={{
+            position: 'absolute',
+            top: '80%',
+            left: '15%',
+            width: '60px',
+            height: '60px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, rgba(255, 99, 71, 0.35), rgba(255, 182, 193, 0.25))',
+            transform: `translate(${bgPosition.x * 0.4}px, ${bgPosition.y * 0.4}px)`,
+            transition: 'transform 0.15s ease-out',
+            boxShadow: '0 4px 15px rgba(255, 182, 193, 0.3)'
+          }}></div>
+          
+          {/* 装饰元素5：椭圆 */}
+          <div style={{
+            position: 'absolute',
+            top: '45%',
+            left: '10%',
+            width: '140px',
+            height: '80px',
+            borderRadius: '40px',
+            background: 'linear-gradient(135deg, rgba(147, 112, 219, 0.35), rgba(221, 160, 221, 0.25))',
+            transform: `translate(${bgPosition.x * -0.3}px, ${bgPosition.y * -0.3}px) rotate(-20deg)`,
+            transition: 'transform 0.15s ease-out',
+            boxShadow: '0 4px 20px rgba(221, 160, 221, 0.3)'
+          }}></div>
+        </div>
+        
+        {/* 2. 登录卡片：强化悬浮动画和互动反馈 */}
       <div 
         style={{
           width: '100%',
           maxWidth: '420px',
-          backgroundColor: 'rgba(255, 255, 255, 0.8)', 
+          backgroundColor: 'rgba(255, 255, 255, 0.95)', 
           borderRadius: '16px',
           boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.1)',
           padding: '48px 32px',
           position: 'relative',
           overflow: 'hidden',
           transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+          zIndex: 1,
         }}
         onMouseEnter={(e) => {
           (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-5px) scale(1.01)';

@@ -7,6 +7,8 @@ interface FilterBarProps {
     tags: string[];
     selectedTags: string[];
     setSelectedTags: (tags: string[]) => void;
+    searchQuery: string;
+    setSearchQuery: (query: string) => void;
 }
 
 export default function FilterBar({
@@ -14,7 +16,9 @@ export default function FilterBar({
     setSortBy,
     tags,
     selectedTags,
-    setSelectedTags
+    setSelectedTags,
+    searchQuery,
+    setSearchQuery
 }: FilterBarProps) {
     const [showAllTags, setShowAllTags] = useState(false);
 
@@ -22,6 +26,20 @@ export default function FilterBar({
         <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 py-2">
             <div className="container mx-auto px-4">
                 <div className="flex flex-wrap items-center gap-4">
+                    {/* 搜索框 */}
+                    <div className="relative">
+                        <input
+                            type="text"
+                            placeholder="搜索世界名称或标签..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="px-4 py-1 pl-10 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 w-64"
+                        />
+                        <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    
                     {/* 排序筛选 */}
                     <div>
                         <select

@@ -114,8 +114,6 @@ export default function NovelsPage() {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar
         title="小说集"
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
       />
       
       <div className="container mx-auto px-4 py-2">
@@ -131,7 +129,21 @@ export default function NovelsPage() {
       </div>
       
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">所有小说</h1>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <h1 className="text-2xl font-bold text-gray-800">所有小说</h1>
+          <div className="relative w-full md:w-80">
+            <input
+              type="text"
+              placeholder="搜索小说名称、内容或标签..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-2 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </div>
+        </div>
         
         {filteredNovels.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

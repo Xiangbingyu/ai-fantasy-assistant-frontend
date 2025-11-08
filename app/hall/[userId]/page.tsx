@@ -239,8 +239,6 @@ export default function WorldHall() {
     <div className="min-h-screen flex flex-col bg-white"> 
       <Navbar
         title="幻境协创"
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
         />
       
       {/* 移除这个容器 */}
@@ -267,6 +265,8 @@ export default function WorldHall() {
         tags={tags}
         selectedTags={selectedTags}
         setSelectedTags={setSelectedTags}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
     />
     </div>
 
