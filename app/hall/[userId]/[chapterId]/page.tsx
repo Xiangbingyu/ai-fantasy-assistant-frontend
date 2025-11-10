@@ -143,6 +143,36 @@ export default function ChapterPage() {
   const params = useParams<{ userId: string; chapterId: string }>();
   const userId = params.userId;
   const chapterId = params.chapterId;
+  
+  // 添加响应式检测状态
+  const [isMobile, setIsMobile] = useState(false);
+  const [activePanel, setActivePanel] = useState<'left' | 'suggestion' | 'right' | null>(null);
+  
+  // 检测窗口大小变化
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 768); // 768px 作为移动设备与桌面设备的分界
+    };
+    
+    // 初始化检测
+    checkIsMobile();
+    // 添加事件监听器
+    window.addEventListener('resize', checkIsMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkIsMobile);
+    };
+  }, []);
+  
+  // 关闭侧边栏
+  const closePanel = () => {
+    setActivePanel(null);
+  };
+  
+  // 切换侧边栏
+  const togglePanel = (panel: 'left' | 'suggestion' | 'right') => {
+    setActivePanel(activePanel === panel ? null : panel);
+  };
 
   const [chapter, setChapter] = useState<Partial<Chapter> | null>(null);
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
@@ -1125,6 +1155,92 @@ export default function ChapterPage() {
     );
   }, [editingId, suggestions, suggestionsLoading, suggestionsError]);
 
+  // 移动端底部按钮栏
+  const mobileBottomBar = useMemo(() => {
+    if (!isMobile) return null;
+    
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 60,
+          backgroundColor: '#ffffff',
+          borderTop: '1px solid #e5e7eb',
+          display: 'flex',
+          justifyContent: 'space-around',
+          alignItems: 'center',
+          zIndex: 900,
+        }}
+      >
+        <button
+          onClick={() => togglePanel('left')}
+          style={{
+            flex: 1,
+            height: '100%',
+            border: 'none',
+            background: activePanel === 'left' ? '#f0f9ff' : '#ffffff',
+            color: activePanel === 'left' ? '#2563eb' : '#6b7280',
+            fontSize: 14,
+            cursor: 'pointer',
+          }}
+        >
+          剧情分析
+        </button>
+        <button
+          onClick={() => togglePanel('suggestion')}
+          style={{
+            flex: 1,
+            height: '100%',
+            border: 'none',
+            background: activePanel === 'suggestion' ? '#f0f9ff' : '#ffffff',
+            color: activePanel === 'suggestion' ? '#2563eb' : '#6b7280',
+            fontSize: 14,
+            cursor: 'pointer',
+          }}
+        >
+          灵感建议
+        </button>
+        <button
+          onClick={() => togglePanel('right')}
+          style={{
+            flex: 1,
+            height: '100%',
+            border: 'none',
+            background: activePanel === 'right' ? '#f0f9ff' : '#ffffff',
+            color: activePanel === 'right' ? '#2563eb' : '#6b7280',
+            fontSize: 14,
+            cursor: 'pointer',
+          }}
+        >
+          世界面板
+        </button>
+      </div>
+    );
+  }, [isMobile, activePanel]);
+  
+  // 移动端侧边栏遮罩层
+  const mobileOverlay = useMemo(() => {
+    if (!isMobile || !activePanel) return null;
+    
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 899,
+        }}
+        onClick={closePanel}
+      />
+    );
+  }, [isMobile, activePanel]);
+  
   return (
     <div
       style={{
@@ -1133,10 +1249,93 @@ export default function ChapterPage() {
         overflow: 'hidden',
       }}
     >
-      {leftSidebar}
-      {paper}
-      {suggestionPanel}
-      {sidebar}
+      {isMobile ? (
+        // 移动端布局
+        <>
+          <div
+            style={{
+              flex: 1,
+              overflow: 'hidden',
+              paddingBottom: 60, // 为底部按钮栏留出空间
+            }}
+          >
+            {paper}
+          </div>
+          
+          {/* 移动端侧边栏 - 覆盖层显示 */}
+          {(activePanel === 'left' || activePanel === 'suggestion' || activePanel === 'right') && (
+            <div
+              style={{
+                position: 'fixed',
+                top: 0,
+                right: activePanel === 'right' ? 0 : undefined,
+                left: activePanel === 'left' || activePanel === 'suggestion' ? 0 : undefined,
+                width: '80%',
+                maxWidth: 400,
+                height: '100vh',
+                backgroundColor: '#ffffff',
+                zIndex: 900,
+                overflowY: 'auto',
+                boxShadow: '0 0 20px rgba(0, 0, 0, 0.15)',
+              }}
+            >
+              {/* 侧边栏头部 - 带关闭按钮 */}
+              <div
+                style={{
+                  position: 'sticky',
+                  top: 0,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: 16,
+                  backgroundColor: '#ffffff',
+                  borderBottom: '1px solid #e5e7eb',
+                  zIndex: 10,
+                }}
+              >
+                <h3 style={{ margin: 0, fontSize: 18 }}>
+                  {activePanel === 'left' && '剧情分析'}
+                  {activePanel === 'suggestion' && '灵感建议'}
+                  {activePanel === 'right' && '世界面板'}
+                </h3>
+                <button
+                  onClick={closePanel}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    fontSize: 24,
+                    cursor: 'pointer',
+                    color: '#6b7280',
+                    padding: '4px',
+                  }}
+                >
+                  &times;
+                </button>
+              </div>
+              
+              {/* 侧边栏内容 */}
+              <div style={{ padding: 16 }}>
+                {activePanel === 'left' && leftSidebar}
+                {activePanel === 'suggestion' && suggestionPanel}
+                {activePanel === 'right' && sidebar}
+              </div>
+            </div>
+          )}
+          
+          {mobileOverlay}
+          {mobileBottomBar}
+        </>
+      ) : (
+        // 桌面端布局 - 保持原有布局
+        <>
+          {leftSidebar}
+          {paper}
+          {suggestionPanel}
+          {sidebar}
+        </>
+      )}
+      
+      {/* 故事详情弹窗始终显示 */}
       <NovelDetailModal />
     </div>
   );

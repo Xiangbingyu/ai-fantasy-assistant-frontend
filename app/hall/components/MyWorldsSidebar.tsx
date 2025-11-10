@@ -29,7 +29,7 @@ export default function MyWorldsSidebar({ myWorlds, onSelectWorld, onDeleteWorld
                                 <li key={world.id} className="relative group">
                                     <button
                                         onClick={() => onSelectWorld(world.id)}
-                                        className="w-full text-left p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex flex-col transition-colors duration-200"
+                                        className="w-full text-left p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex flex-col transition-colors duration-200 pr-10"
                                     >
                                         <div className="flex items-center whitespace-nowrap"> {/* 新增 whitespace-nowrap 禁止换行 */}
                                             <span className="truncate flex-1"> {/* 名称过长时截断，flex-1 占满剩余空间 */}
@@ -47,9 +47,9 @@ export default function MyWorldsSidebar({ myWorlds, onSelectWorld, onDeleteWorld
                                     {/* 优化后的删除按钮 */}
                                     <button
                                         onClick={(e) => handleDeleteClick(e, world.id)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-red-50 text-red-500 
+                                        className="absolute right-2 top-3 w-7 h-7 rounded-full bg-red-50 text-red-500 
                                                     hover:bg-red-500 hover:text-white border border-red-200 hover:border-red-500
-                                                    flex items-center justify-center opacity-0 group-hover:opacity-100
+                                                    flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100
                                                     transition-all duration-200 shadow-sm hover:shadow"
                                         aria-label={`删除世界 ${world.name}`}
                                     >
