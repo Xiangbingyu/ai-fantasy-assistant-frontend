@@ -627,8 +627,42 @@ export default function LoginPage() {
           }}>
             前端：Next.js + React + TypeScript | 后端：Flask
           </p>
+          
+
         </div>
       </div>
+      
+      {/* ICP备案信息 - 移至网站底部 */}
+      <p style={{
+        position: 'absolute',
+        bottom: isMobile ? '10px' : '15px',
+        fontSize: '12px',
+        color: '#94a3b8',
+        margin: '0',
+        opacity: 0.8,
+        textAlign: 'center',
+        width: '100%',
+        zIndex: 1,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+        <span>
+          <img 
+            alt="" 
+            src="/image/foot-icp.png" 
+            style={{ marginRight: '5px', verticalAlign: 'middle', display: 'inline-block' }}
+          />
+          <a 
+            href="https://beian.miit.gov.cn/#/Integrated/index" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            style={{ color: '#94a3b8', textDecoration: 'none', display: 'inline-block', verticalAlign: 'middle' }}
+          >
+            蜀ICP备2025170897号
+          </a>
+        </span>
+      </p>
     </div>
   );
 }
