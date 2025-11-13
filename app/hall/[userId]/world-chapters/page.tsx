@@ -1042,7 +1042,7 @@ export default function WorldChaptersPage() {
               <svg className="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
               </svg>
-              你已成功创建世界和章节，点击进入章节开始创作
+              请填写章节信息，将与世界一起创建
             </div>
           )}
 
